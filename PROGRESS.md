@@ -13,7 +13,7 @@
   - [x] 6. `src/lib/money.ts` + `src/lib/fsm.ts` with tests.
 
 ### Exact next task
-1. **Fill in `DATABASE_URL` and `DIRECT_URL` in `.env.local`** (M5, see "Create .env.local" below).
+1. **Fill in `DATABASE_URL` and `DIRECT_URL` in `.env.local`** (M5, see "Create .env.local" below). The Neon project already exists: open it → Connect, and copy both strings. Save the file, then confirm with `npm run dev` (they should no longer be listed as missing).
 2. Run `npx prisma migrate dev --name init`, then `npx prisma db seed`. Expect "Seeded: 8 live listings, 1 orders, 2 payouts". Run the seed twice to confirm nothing duplicates.
    - If you see SSL error P1010, add `ssl: { rejectUnauthorized: false }` handling per the Prisma 7 docs.
 3. `npm run dev` → `/` should show the 8 seeded listings (not the sample ones). Then delete `src/lib/sample.ts` and its fallback in `src/lib/listings.ts`.
@@ -58,7 +58,7 @@ Never paste these values into chat, commits or screenshots.
 | M2 PayPal sandbox app | Pending |
 | M3 Sandbox accounts | Pending |
 | M4 Gemini key | Pending |
-| M5 Neon | Pending, **needed first next session** |
+| M5 Neon | **Neon project created**, but the URLs never got saved into `.env.local` on the session-1 laptop, so migrate/seed haven't run. **First thing next session:** put both URLs in `.env.local` on your laptop |
 | M6 Vercel + Blob | Pending (Phase 1 Blob / Phase 5 deploy) |
 | M7–M12 | Later phases |
 

@@ -3,9 +3,43 @@ import { Search, Sparkles } from "lucide-react";
 import { ListingCard } from "@/components/ListingCard";
 import { BuyerBottomNav, TopNav } from "@/components/Nav";
 import { PlaceholderImage } from "@/components/ui";
-import { SAMPLE_LISTINGS } from "@/lib/sample";
+import { getLiveListings } from "@/lib/listings";
+import { Suspense } from "react";
 
 const CATEGORIES = ["All", "Silk sarees", "Cotton sarees", "Dupattas"];
+const GRID = "grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-6 lg:grid-cols-4";
+
+async function NewFromTheLoom() {
+  const { listings, source } = await getLiveListings();
+  if (source === "error") {
+    return <p className="t-body text-ink-muted">We couldn&apos;t load the pieces just now. Please refresh in a moment.</p>;
+  }
+  if (listings.length === 0) {
+    return <p className="t-body text-ink-muted">New pieces are on the loom. Check back soon.</p>;
+  }
+  return (
+    <div className={GRID}>
+      {listings.map((l) => (
+        <ListingCard key={l.id} l={l} />
+      ))}
+    </div>
+  );
+}
+
+function GridSkeleton() {
+  return (
+    <div className={GRID} aria-busy="true" aria-label="Loading pieces">
+      {Array.from({ length: 8 }, (_, i) => (
+        <div key={i} className="th-card">
+          <div className="th-listing__media">
+            <PlaceholderImage seed={i} label="Loading" />
+          </div>
+          <div className="th-listing__body" style={{ height: 72 }} />
+        </div>
+      ))}
+    </div>
+  );
+}
 
 export default function Home() {
   return (
@@ -52,11 +86,9 @@ export default function Home() {
         </Link>
 
         <h2 className="t-title mb-4 mt-8">New from the loom</h2>
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-6 lg:grid-cols-4">
-          {SAMPLE_LISTINGS.map((l) => (
-            <ListingCard key={l.id} l={l} />
-          ))}
-        </div>
+        <Suspense fallback={<GridSkeleton />}>
+          <NewFromTheLoom />
+        </Suspense>
       </main>
       <footer className="mx-auto max-w-[1200px] px-6 pb-[100px] text-center md:pb-8">
         <Link href="/demo" className="t-caption text-ink-muted">

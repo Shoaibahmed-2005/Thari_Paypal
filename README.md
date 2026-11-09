@@ -8,10 +8,14 @@ Handloom weavers in Tamil Nadu sell worldwide with their voice and phone, with p
 
 ```bash
 npm install
-cp .env.example .env.local   # fill in values
+cp .env.example .env.local   # fill in values (see PROGRESS.md → "Create .env.local")
+npx prisma migrate dev --name init
+npx prisma db seed
 npm run dev
 npm test
 ```
+
+`.env.local` is git-ignored and must be created on every machine. Never commit it.
 
 ## License
 

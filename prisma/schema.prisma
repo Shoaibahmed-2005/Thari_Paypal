@@ -1,0 +1,203 @@
+// BUILD_PLAN section 7, adapted to Prisma 7:
+// - generator "prisma-client" with an output path (required in v7)
+// - connection URLs live in prisma.config.ts (CLI, direct URL) and
+//   src/lib/db.ts (runtime, pooled URL via @prisma/adapter-neon)
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  WEAVER
+  BUYER
+  COOP_ADMIN
+}
+
+enum ListingStatus {
+  DRAFT
+  NEEDS_ANSWERS
+  READY_TO_CONFIRM
+  LIVE
+  SOLD
+  ARCHIVED
+}
+
+enum OrderStatus {
+  CREATED
+  PAID
+  SHIPPED
+  DELIVERED
+  REFUNDED
+  FAILED
+}
+
+enum Channel {
+  WEB
+  ASSISTANT
+  MCP
+}
+
+enum PayoutRecipient {
+  WEAVER
+  COOP
+}
+
+enum PayoutStatus {
+  PENDING
+  SENT
+  SUCCEEDED
+  FAILED
+}
+
+model Coop {
+  id            String @id @default(cuid())
+  name          String
+  town          String
+  paypalEmail   String
+  commissionPct Int    @default(10)
+  weavers       User[]
+}
+
+model User {
+  id            String         @id @default(cuid())
+  role          Role
+  name          String
+  town          String?
+  bioTa         String?
+  bioEn         String?
+  photoUrl      String?
+  paypalEmail   String? // sandbox receiver for payouts (weaver)
+  email         String? // buyer
+  coopId        String?
+  coop          Coop?          @relation(fields: [coopId], references: [id])
+  listings      Listing[]
+  orders        Order[]        @relation("BuyerOrders")
+  notifications Notification[]
+  createdAt     DateTime       @default(now())
+}
+
+model Listing {
+  id               String        @id @default(cuid())
+  weaverId         String
+  weaver           User          @relation(fields: [weaverId], references: [id])
+  status           ListingStatus @default(DRAFT)
+  title            String?
+  titleTa          String? // short Tamil name, used in the sale notification (section 10.4)
+  description      String?
+  story            String?
+  category         String? // saree | dupatta | stole | fabric
+  fabric           String? // silk | cotton | silk-cotton | ...
+  weave            String? // e.g. Kanchipuram, Chettinad, Arani
+  colors           String[]
+  motifs           String[]
+  includesBlouse   Boolean?
+  stitched         Boolean?
+  lengthMeters     Float?
+  weeksToWeave     Int?
+  giTag            String?
+  priceInr         Int?
+  priceUsdCents    Int?
+  photos           Photo[]
+  loomClipUrl      String?
+  voiceNoteUrl     String?
+  transcriptTa     String?
+  transcriptEn     String?
+  pendingQuestions Json?
+  readbackTa       String?
+  readbackAudioUrl String?
+  aiRaw            Json?
+  coopConfirmedAt  DateTime?
+  paypalProductId  String?
+  orders           Order[]
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+}
+
+model Photo {
+  id        String  @id @default(cuid())
+  listingId String
+  listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  url       String
+  position  Int
+}
+
+model Order {
+  id               String      @id @default(cuid())
+  listingId        String
+  listing          Listing     @relation(fields: [listingId], references: [id])
+  buyerId          String?
+  buyer            User?       @relation("BuyerOrders", fields: [buyerId], references: [id])
+  status           OrderStatus @default(CREATED)
+  channel          Channel     @default(WEB)
+  paypalOrderId    String      @unique
+  captureId        String?     @unique
+  itemUsdCents     Int
+  shippingUsdCents Int
+  totalUsdCents    Int
+  payerEmail       String?
+  shippingAddress  Json?
+  trackingNumber   String?
+  carrier          String?
+  fulfilledAt      DateTime?
+  refundedAt       DateTime?
+  payouts          Payout[]
+  createdAt        DateTime    @default(now())
+}
+
+model Payout {
+  id             String          @id @default(cuid())
+  orderId        String
+  order          Order           @relation(fields: [orderId], references: [id])
+  recipient      PayoutRecipient
+  receiverEmail  String
+  amountUsdCents Int
+  status         PayoutStatus    @default(PENDING)
+  paypalBatchId  String?
+  paypalItemId   String?
+  error          String?
+  createdAt      DateTime        @default(now())
+
+  @@unique([orderId, recipient])
+}
+
+model Notification {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id])
+  kind      String // SOLD | PAYOUT | QUESTION | SHIPPED_REMINDER
+  textTa    String
+  textEn    String
+  audioUrl  String?
+  orderId   String?
+  heardAt   DateTime?
+  createdAt DateTime  @default(now())
+}
+
+model WebhookEvent {
+  id          String    @id // PayPal event id
+  type        String
+  payload     Json
+  processedAt DateTime?
+  createdAt   DateTime  @default(now())
+}
+
+model AgentLog {
+  id        String   @id @default(cuid())
+  actor     String
+  action    String
+  listingId String?
+  orderId   String?
+  detail    Json
+  createdAt DateTime @default(now())
+}
+
+model TtsCache {
+  hash      String   @id
+  url       String
+  createdAt DateTime @default(now())
+}

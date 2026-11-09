@@ -27,7 +27,7 @@
 ### MANUAL items
 | ID | Status |
 |---|---|
-| M1 GitHub repo | Done (repo exists, remote set). Push status: see above |
+| M1 GitHub repo | Done (repo exists, remote set). Repo is github.com/Shoaibahmed-2005/Thari_Paypal (not thari-paypal) |
 | M2 PayPal sandbox app | Pending |
 | M3 Sandbox accounts | Pending |
 | M4 Gemini key | Pending |
@@ -40,8 +40,8 @@
 
 ### Fresh-machine setup
 ```bash
-git clone https://github.com/Shoaibahmed-2005/thari-paypal.git
-cd thari-paypal
+git clone https://github.com/Shoaibahmed-2005/Thari_Paypal.git
+cd Thari_Paypal
 npm install
 cp .env.example .env.local        # then fill in values (never commit)
 npx prisma migrate dev            # once prisma/ exists (next session)

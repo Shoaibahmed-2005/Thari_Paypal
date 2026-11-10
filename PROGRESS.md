@@ -28,6 +28,15 @@
 - `src/lib/i18n.ts` carries the weaver UI strings in Tamil, Hindi, Telugu, Bengali and English, with English filling any gap. Devanagari, Telugu and Bengali fonts load via `next/font`.
 - Fixed: iron-session calls `Date.now()` while unsealing, which Cache Components flags during prerendering, so `getCurrentUser()` now calls `connection()` first.
 
+### M4 done: Gemini is live and verified (2026-11-11)
+- `GEMINI_API_KEY` set by the human. Model IDs chosen from the live `/v1beta/models` listing and aistudio.google.com/docs, not from memory:
+  - `GEMINI_MODEL=gemini-3.6-flash`, `GEMINI_TTS_MODEL=gemini-3.8-flash-tts`, `GEMINI_TTS_VOICE=Sulafat` (the voice the docs call "warm").
+  - **gemini-3.8-flash and 3.7-flash were both returning 503 "experiencing high demand"** when tested, while 3.6-flash answered in 2.6s. `client.ts` now falls through a candidate list on 503/429 rather than failing, so a demand spike during judging cannot kill the demo.
+- **`AI_MODE=live` verified end to end through the real route.** Posted the generated Tamil WAV to `/api/listings/draft`: 200 in 20s, transcribed the Tamil, extracted ₹18,000 (-> $205 computed server-side), returned status NEEDS_ANSWERS with one Tamil question about length, and a Tamil read-back ending "வெளியிடலாமா?". The test draft was deleted afterwards.
+- **M8 partly done:** `public/samples/sample-voice-ta.wav` and `sample-answer-ta.wav` generated from the BUILD_PLAN 14.3 script with Gemini TTS via `npx tsx scripts/make-sample-voice.ts`. **These are synthetic stand-ins — replace them with a real Tamil speaker's recording if one can be made; the filenames are what the UI loads.**
+- **Deviation from 10.3:** the plan expected raw PCM needing a WAV header. Unary TTS responses already return `audio/wav` with a RIFF header, so the wrapper only runs if a response ever comes back headerless.
+- **Deviation:** TTS is called over REST, not through `@google/genai`. The installed SDK serialises `speechConfig` in a way the API rejects ("Unknown name speechConfig at generation_config") while the identical shape over REST returns 200. Text generation through the SDK is fine.
+
 ### Exact next task
 1. **Phase 2 leftovers, in priority order** (see the blocked list below): Blob upload (needs M6) to replace data-URL photos; a WAV encoder for live-mode recording; `/w/sales`, `/w/money`, `/weavers/[id]`.
 2. **Phase 3 — PayPal checkout, capture, split, notification** (BUILD_PLAN section 11, Phase 3 in section 15). Needs **M2 and M3**: the sandbox app credentials and the three sandbox account emails. Ask for these next.

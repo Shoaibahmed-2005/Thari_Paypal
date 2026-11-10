@@ -42,6 +42,25 @@ export interface CallOptions<T> {
 
 const TIMEOUT_MS = 45_000;
 
+/**
+ * Gemini returns 503 "experiencing high demand" on popular models at busy
+ * times — hit live on 2026-11-11, when gemini-3.8-flash and 3.7-flash were
+ * both overloaded while 3.6-flash answered in under three seconds. A demo in
+ * front of judges cannot depend on one model being free, so an overload falls
+ * through to the next candidate instead of failing.
+ */
+const FALLBACK_MODELS = ["gemini-3.6-flash", "gemini-3.5-flash"];
+
+function modelCandidates(primary: string): string[] {
+  return [primary, ...FALLBACK_MODELS.filter((m) => m !== primary)];
+}
+
+function isOverloaded(err: unknown): boolean {
+  const status = (err as { status?: number })?.status;
+  if (status === 503 || status === 429) return true;
+  return /(503|429)|overloaded|high demand|unavailable|rate.?limit/i.test(String((err as Error)?.message ?? ""));
+}
+
 function isRetryable(err: unknown): boolean {
   const status = (err as { status?: number })?.status;
   if (typeof status === "number") return status === 429 || status >= 500;
@@ -91,12 +110,12 @@ export async function callAi<T>(opts: CallOptions<T>): Promise<T> {
   const parts: object[] = [{ text: opts.text }];
   for (const m of opts.media ?? []) parts.push({ inlineData: { mimeType: m.mimeType, data: m.data } });
 
-  const run = async () => {
+  const run = async (modelId: string) => {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
     try {
       return await ai.models.generateContent({
-        model,
+        model: modelId,
         contents: [{ role: "user", parts }],
         config: {
           systemInstruction: opts.systemPrompt,
@@ -111,15 +130,22 @@ export async function callAi<T>(opts: CallOptions<T>): Promise<T> {
   };
 
   let raw: string | undefined;
+  let usedModel = model;
   try {
     let response;
-    try {
-      response = await run();
-    } catch (err) {
-      if (!isRetryable(err)) throw err;
-      await new Promise((r) => setTimeout(r, 1500));
-      response = await run();
+    let lastErr: unknown;
+    // Try each candidate once; an overloaded model falls through to the next.
+    for (const candidate of modelCandidates(model)) {
+      try {
+        response = await run(candidate);
+        usedModel = candidate;
+        break;
+      } catch (err) {
+        lastErr = err;
+        if (!isOverloaded(err) && !isRetryable(err)) throw err;
+      }
     }
+    if (!response) throw lastErr ?? new Error("no model answered");
     raw = response.text;
   } catch (err) {
     const aborted = (err as Error)?.name === "AbortError";
@@ -151,6 +177,6 @@ export async function callAi<T>(opts: CallOptions<T>): Promise<T> {
     throw new AiError("The AI's answer didn't match what we expected.", "invalid-output", result.error);
   }
 
-  await logAgent(opts.action, opts.listingId, { mode: "live", ms: Date.now() - started, model });
+  await logAgent(opts.action, opts.listingId, { mode: "live", ms: Date.now() - started, model: usedModel });
   return result.data;
 }

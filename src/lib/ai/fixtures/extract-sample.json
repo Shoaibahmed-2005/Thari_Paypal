@@ -1,0 +1,29 @@
+{
+  "transcriptNative": "நான் ஒரு காஞ்சிபுரம் பட்டுப் புடவை நெய்திருக்கிறேன். ஆரஞ்சும் மஞ்சளும் கலந்த நிறம், மயில் பார்டர். ரவிக்கைத் துண்டு உண்டு, தைக்கப்படவில்லை. விலை பதினெட்டாயிரம் ரூபாய். நெய்ய ஆறு வாரம் ஆனது.",
+  "transcriptEn": "I have woven a Kanchipuram silk saree. Orange and yellow, peacock border. Blouse piece included, unstitched. Price eighteen thousand rupees. It took six weeks to weave.",
+  "category": "saree",
+  "fabric": "silk",
+  "weave": "Kanchipuram",
+  "colors": ["orange", "yellow"],
+  "motifs": ["peacock border"],
+  "includesBlouse": true,
+  "stitched": false,
+  "lengthMeters": null,
+  "weeksToWeave": 6,
+  "priceInr": 18000,
+  "photoObservations": "Orange silk body shading into yellow, with a woven peacock border in gold-toned zari along both edges and a matching pallu. The blouse piece is folded alongside, uncut.",
+  "conflicts": [],
+  "title": "Kanchipuram silk saree, orange and yellow with peacock border",
+  "titleNative": "ஆரஞ்சு பட்டுப் புடவை",
+  "description": "A handwoven Kanchipuram silk saree in orange shading into yellow, with a woven peacock border along both edges and a matching pallu. An unstitched blouse piece is included. Woven on a pit loom with interlocked borders, the traditional Kanchipuram technique, which is why the border colour stays crisp on both sides of the cloth. The weaver spent six weeks at the loom on this piece.",
+  "story": "Lakshmi wove this saree over six weeks in Kanchipuram, where she has worked a pit loom for twenty years. The peacock border is worked thread by thread with a second shuttle, the slow part of the job, and the reason the colour holds on both faces of the cloth.",
+  "missingFields": ["lengthMeters"],
+  "questions": [
+    {
+      "field": "lengthMeters",
+      "questionNative": "புடவை எத்தனை மீட்டர்?",
+      "questionEn": "How many metres is the saree?"
+    }
+  ],
+  "readbackNative": "காஞ்சிபுரம் பட்டுப் புடவை, ஆரஞ்சு மஞ்சள் நிறம், மயில் பார்டர். ரவிக்கைத் துண்டு உண்டு. விலை பதினெட்டாயிரம் ரூபாய். வெளியிடலாமா?"
+}

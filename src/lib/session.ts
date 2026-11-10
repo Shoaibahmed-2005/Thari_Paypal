@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import { connection } from "next/server";
 import { unstable_rethrow } from "next/navigation";
 import { getIronSession, type IronSession, type SessionOptions } from "iron-session";
 import { env } from "@/lib/env";
@@ -52,9 +53,16 @@ export async function getSession(): Promise<IronSession<SessionData>> {
   return getIronSession<SessionData>(await cookies(), sessionOptions());
 }
 
-/** Who is signed in, or null. Never throws. */
+/**
+ * Who is signed in, or null. Never throws.
+ *
+ * `connection()` first: iron-session calls `Date.now()` while unsealing the
+ * cookie, which Cache Components flags as unstable during prerendering. This
+ * marks the read as request-time data, which is what it is.
+ */
 export async function getCurrentUser(): Promise<Required<SessionData> | null> {
   try {
+    await connection();
     const s = await getSession();
     if (!s.userId || !s.role) return null;
     return { userId: s.userId, role: s.role, name: s.name ?? "" };

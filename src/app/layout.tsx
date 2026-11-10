@@ -1,5 +1,12 @@
 import type { Metadata } from "next";
-import { Fraunces, Manrope, Noto_Sans_Tamil } from "next/font/google";
+import {
+  Fraunces,
+  Manrope,
+  Noto_Sans_Bengali,
+  Noto_Sans_Devanagari,
+  Noto_Sans_Tamil,
+  Noto_Sans_Telugu,
+} from "next/font/google";
 import "./globals.css";
 
 /*
@@ -19,6 +26,28 @@ const tamil = Noto_Sans_Tamil({
   variable: "--nf-tamil",
   display: "swap",
 });
+// The weaver chooses her language (src/lib/languages.ts), so the scripts she
+// may write in are loaded alongside Tamil. next/font keeps the literal family
+// names, so `fontStackFor()` can name them directly. Brand tokens unchanged.
+const devanagari = Noto_Sans_Devanagari({
+  subsets: ["devanagari"],
+  weight: ["500", "700"],
+  variable: "--nf-devanagari",
+  display: "swap",
+});
+const telugu = Noto_Sans_Telugu({
+  subsets: ["telugu"],
+  weight: ["500", "700"],
+  variable: "--nf-telugu",
+  display: "swap",
+});
+const bengali = Noto_Sans_Bengali({
+  subsets: ["bengali"],
+  weight: ["500", "700"],
+  variable: "--nf-bengali",
+  display: "swap",
+});
+
 const fraunces = Fraunces({
   subsets: ["latin"],
   weight: ["400", "600"],
@@ -34,7 +63,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${manrope.variable} ${tamil.variable} ${fraunces.variable}`}>
+    <html lang="en" className={`${manrope.variable} ${tamil.variable} ${devanagari.variable} ${telugu.variable} ${bengali.variable} ${fraunces.variable}`}>
       <body className="th-root min-h-dvh">{children}</body>
     </html>
   );

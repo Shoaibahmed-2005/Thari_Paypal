@@ -1,0 +1,132 @@
+import { Suspense } from "react";
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import type { Metadata } from "next";
+import { Mic } from "lucide-react";
+import { WeaverBottomNav } from "@/components/Nav";
+import { NotificationCard } from "@/components/NotificationCard";
+import { PlaceholderImage, StatusChip, Wordmark } from "@/components/ui";
+import type { ChipStatus } from "@/components/ui";
+import { fill, weaverStrings } from "@/lib/i18n";
+import { fontStackFor } from "@/lib/languages";
+import { formatInr, usdCentsToInr } from "@/lib/money";
+import { env } from "@/lib/env";
+import { getWeaver, getWeaverMoney, getWeaverNotifications, getWeaverPieces } from "@/lib/weaver";
+
+export const metadata: Metadata = { title: "Thari — weaver" };
+
+/** Listing status -> the chip the weaver sees. */
+const CHIP: Record<string, ChipStatus> = {
+  DRAFT: "listed",
+  NEEDS_ANSWERS: "payout-pending",
+  READY_TO_CONFIRM: "payout-pending",
+  LIVE: "listed",
+  SOLD: "sold",
+};
+
+async function WeaverHome() {
+  const weaver = await getWeaver();
+  if (!weaver) redirect("/demo");
+
+  const { t, language } = weaverStrings(weaver.preferredLang);
+  const nativeFont = fontStackFor(language.script);
+
+  const [pieces, notifications, money] = await Promise.all([
+    getWeaverPieces(weaver.id),
+    getWeaverNotifications(weaver.id),
+    getWeaverMoney(weaver.id),
+  ]);
+
+  const unheard = notifications.find((n) => !n.heardAt);
+  const comingInr = usdCentsToInr(money.pendingUsdCents + money.receivedUsdCents, env.FX_INR_PER_USD);
+
+  return (
+    <>
+      <header className="th-row justify-between">
+        <Link href="/w" aria-label="Thari">
+          <Wordmark />
+        </Link>
+        <Link href="/api/logout" className="t-caption text-ink-muted">
+          {language.nativeName}
+        </Link>
+      </header>
+
+      <h1 className="t-title-lg mt-4" style={{ fontFamily: nativeFont }} lang={language.code}>
+        {fill(t.greeting, { name: weaver.name.replace(/\s+\w\.$/, "") })}
+      </h1>
+
+      {unheard && <NotificationCard notification={{ id: unheard.id, textNative: unheard.textNative, textEn: unheard.textEn, audioUrl: unheard.audioUrl }} playLabel={t.play} lang={language.code} nativeFont={nativeFont} />}
+
+      <Link
+        href="/w/new"
+        className="mt-5 flex items-center justify-center gap-3 bg-coral px-5 py-6 text-on-coral no-underline"
+        style={{ borderRadius: "var(--radius-xl)", boxShadow: "var(--shadow-float)" }}
+      >
+        <Mic size={28} strokeWidth={1.75} aria-hidden />
+        <span className="t-title m-0" style={{ fontFamily: nativeFont }} lang={language.code}>
+          {t.sellNew}
+        </span>
+      </Link>
+
+      <section className="mt-6">
+        <h2 className="t-title" style={{ fontFamily: nativeFont }} lang={language.code}>
+          {t.myPieces}
+        </h2>
+        {pieces.length === 0 ? (
+          <p className="t-body text-ink-muted" style={{ fontFamily: nativeFont }} lang={language.code}>
+            {t.noPieces}
+          </p>
+        ) : (
+          <ul className="mt-2 flex list-none flex-col gap-3 p-0">
+            {pieces.map((p, i) => (
+              <li key={p.id} className="th-card flex-row items-center gap-3 p-3">
+                <div className="h-16 w-16 flex-none overflow-hidden" style={{ borderRadius: "var(--radius-md)" }}>
+                  {p.photos[0] ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={p.photos[0].url} alt="" className="h-full w-full object-cover" />
+                  ) : (
+                    <PlaceholderImage seed={i} label="" />
+                  )}
+                </div>
+                <div className="min-w-0 flex-1">
+                  {p.titleNative && (
+                    <div className="t-label truncate" style={{ fontFamily: nativeFont }} lang={p.lang}>
+                      {p.titleNative}
+                    </div>
+                  )}
+                  <div className="t-caption truncate text-ink-muted">{p.title ?? "Draft"}</div>
+                  <div className="mt-1">
+                    <StatusChip status={CHIP[p.status] ?? "listed"} />
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <section className="th-card mt-6 p-4">
+        <div className="t-caption text-ink-muted" style={{ fontFamily: nativeFont }} lang={language.code}>
+          {t.moneyComing}
+        </div>
+        <div className="th-price" style={{ fontSize: 28, lineHeight: "34px" }}>
+          {formatInr(comingInr)}
+        </div>
+      </section>
+    </>
+  );
+}
+
+export default function WeaverHomePage() {
+  return (
+    <>
+      {/* 8.5: the weaver area is a phone column even on a laptop, so judges see the real experience. */}
+      <main className="mx-auto min-h-dvh max-w-[420px] px-4 pb-[110px] pt-4">
+        <Suspense fallback={<p className="t-body text-ink-muted">…</p>}>
+          <WeaverHome />
+        </Suspense>
+      </main>
+      <WeaverBottomNav current="/w" />
+    </>
+  );
+}

@@ -15,21 +15,31 @@
 
 - **Fixed: Tailwind was emitting no utilities at all.** `next.config.ts` ran Tailwind v4 through a `turbopack.rules` `@tailwindcss/turbopack` loader. That silently produced zero utility classes, so every `mx-auto`, `grid`, `md:*`, `bg-coral` etc. in the app was a no-op and both `/` and `/demo` rendered as unstyled full-bleed stacks (only the hand-written `.th-*` CSS worked). Switched to the setup Next 16 documents (`node_modules/next/dist/docs/01-app/01-getting-started/11-css.md`): `@tailwindcss/postcss` + `postcss.config.mjs`, loader rule and `@tailwindcss/turbopack` removed. Checked in the browser at 1280px -- hero, grid, cards and spacing are correct now.
 
-### Phase 1 is COMPLETE. Acceptance (section 15) passed 2026-11-10
-- `/demo` 200 -> Buyer login 307 -> `/` shows all **8** seeded listings in brand styling, checked at **390px and 1280px**.
-- `/p/[id]` complete: gallery with thumbnails, Tamil sub-title, "Woven by ... in ...", price block (USD + approx INR + $20 shipping), PayPal button stub, full AuthenticityBadge panel, LoomClipPlayer serving the real 10s clip (200, 5.3 MB), details table, craft story, schema.org Product JSON-LD. `seed-l9` correctly shows the Sold chip and a disabled button.
-- `/explore` server-side search across title, description, fabric, weave, colour and weaver name, plus category chips (All / Silk / Cotton / Dupattas), three sorts and an empty state. Home chips link through to it.
-- `npm run build` clean, `tsc --noEmit` clean, `eslint src prisma` clean, `npm test` 12/12.
+### Phase 1 COMPLETE (2026-11-10). Phase 2 core COMPLETE (2026-11-10)
+
+**Phase 1 acceptance passed:** `/demo` -> Buyer -> `/` shows all 8 seeded listings in brand styling at 390px and 1280px; `/p/[id]` complete (gallery, price block, PayPal stub, authenticity panel, loom clip, details, story, Product JSON-LD, Sold state); `/explore` search and filters working.
+
+**Phase 2, verified end to end in the browser with `AI_MODE=mock`:**
+- Weaver demo login -> `/w` renders entirely in Tamil: greeting, "sell a new piece", her pieces with Tamil titles and status chips, money summary. The phone column is centred on a laptop per 8.5.
+- `/w/new` seven-step flow (speak -> photos -> clip -> working -> questions -> read-back -> done) with progress dots. Ran it: sample voice note -> skip photos -> skip clip -> **the AI asked the length question in Tamil ("புடவை எத்தனை மீட்டர்?") exactly as BUILD_PLAN 14.3 predicts** -> answer merged (6.5 m) -> Tamil read-back ending "வெளியிடலாமா?" with the English title and $205 -> published -> "உங்கள் புடவை பட்டியலில் உள்ளது".
+- The published listing appeared on `/explore`, showed 6.5 metres and $205 on its product page, and correctly carried **no** Verified badge (co-op confirmation is Phase 4). The verification listing was deleted afterwards, so the database is back to the 8 seeded ones.
+- `src/lib/ai/`: `client.ts` (45 s timeout, one retry on 429/5xx, Zod validation, AgentLog row, typed AiError, mock short-circuit), `schemas.ts`, `prompts.ts` (language is a parameter), `listing.ts` (extractListing / answerQuestion / regenerateCopy), `fixtures/extract-sample.json` matching the 14.3 script.
+- Routes: `POST /api/listings/draft`, `POST /api/listings/[id]/answer`, `POST /api/listings/[id]/publish`. USD is computed server-side from INR (rule 4); publish runs through the listing FSM.
+- `src/lib/i18n.ts` carries the weaver UI strings in Tamil, Hindi, Telugu, Bengali and English, with English filling any gap. Devanagari, Telugu and Bengali fonts load via `next/font`.
+- Fixed: iron-session calls `Date.now()` while unsealing, which Cache Components flags during prerendering, so `getCurrentUser()` now calls `connection()` first.
 
 ### Exact next task
-**Phase 2 — weaver listing creation with AI** (BUILD_PLAN section 15, screens in 9.3, AI design in 10).
-1. `/w` weaver home: greeting, latest unheard notification card with play button, "sell a new piece" button, my-pieces list with StatusChips, money summary. Note the weaver demo login already redirects here, so `/w` is currently a 404 -- this closes that.
-2. `/w/new` step flow (9.3): speak -> photos -> loom clip -> working -> questions -> read-back and confirm -> done.
-3. `src/lib/ai/` with `AI_MODE=mock` fixtures first, so the whole flow runs before M4 (Gemini key) arrives.
-4. **Carry the language work through:** the weaver UI's hardcoded strings need a per-language dictionary keyed off `User.preferredLang` (see `src/lib/languages.ts`), plus the language picker and `next/font` loading for Devanagari, Telugu and Bengali. The AI prompts take the language as a parameter, not a hardcoded "Tamil".
-5. `/coop` is also still a 404; it is Phase 4.
+1. **Phase 2 leftovers, in priority order** (see the blocked list below): Blob upload (needs M6) to replace data-URL photos; a WAV encoder for live-mode recording; `/w/sales`, `/w/money`, `/weavers/[id]`.
+2. **Phase 3 — PayPal checkout, capture, split, notification** (BUILD_PLAN section 11, Phase 3 in section 15). Needs **M2 and M3**: the sandbox app credentials and the three sandbox account emails. Ask for these next.
+3. Phase 4 adds `/coop` (AG Grid), which is also what sets `coopConfirmedAt` and turns the Verified badge on for newly created listings, plus refunds.
 
 ### Half-done / broken / blocked
+- **Photos from `/w/new` are stored as data URLs in `Photo.url`, not uploaded to Blob.** M6 isn't available, Vercel's filesystem is read-only, and resized JPEGs are roughly 150 KB each, so this works for the demo. Swap to `@vercel/blob` once `BLOB_READ_WRITE_TOKEN` exists.
+- **Live-mode microphone recording needs a WAV encoder.** The recorder uses the browser's own MediaRecorder, which gives webm/opus; Gemini wants wav/mp3/aac/ogg/flac. BUILD_PLAN lists `extendable-media-recorder` + `-wav-encoder` for exactly this and they are still not installed. Mock mode ignores the audio, and the live demo path uses the sample WAV (M8), so this only blocks recording a *new* voice note against live Gemini.
+- **`/samples/sample-voice-ta.wav` does not exist yet (M8).** The "use sample voice note" button currently just advances the step, which is all mock mode needs. Record it before the live demo.
+- **TTS (`/api/tts`, BUILD_PLAN 10.3) is not built.** The Tamil read-back and the notification card fall back to the browser's `speechSynthesis`, which works but sounds robotic. Build it with M4.
+- **The non-Tamil UI strings in `src/lib/i18n.ts` were written by the model.** Tamil is the demo language and reads correctly; Hindi, Telugu and Bengali want a native speaker's check before submission.
+- `/w/sales`, `/w/money` and `/weavers/[id]` are linked but not built; the weaver bottom nav points at two of them.
 - `/api/demo-login?role=weaver` and `?role=coop` redirect to `/w` and `/coop`, which don't exist yet (Phase 2 and Phase 4). The buyer role works end to end today.
 - The same loom clip is reused for every verified listing. Fine for the demo; swap per-piece clips if more arrive.
 - `.gitignore` excludes `src/generated/` (Prisma client). `npm install` regenerates it through the `postinstall` script.

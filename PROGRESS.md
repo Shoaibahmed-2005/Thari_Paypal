@@ -16,15 +16,14 @@
 - **Fixed: Tailwind was emitting no utilities at all.** `next.config.ts` ran Tailwind v4 through a `turbopack.rules` `@tailwindcss/turbopack` loader. That silently produced zero utility classes, so every `mx-auto`, `grid`, `md:*`, `bg-coral` etc. in the app was a no-op and both `/` and `/demo` rendered as unstyled full-bleed stacks (only the hand-written `.th-*` CSS worked). Switched to the setup Next 16 documents (`node_modules/next/dist/docs/01-app/01-getting-started/11-css.md`): `@tailwindcss/postcss` + `postcss.config.mjs`, loader rule and `@tailwindcss/turbopack` removed. Checked in the browser at 1280px -- hero, grid, cards and spacing are correct now.
 
 ### Exact next task
-1. **Still blocked on M5.** Put `DATABASE_URL` and `DIRECT_URL` in `.env.local` (Neon project `thari` -> Connect; pooling ON for `DATABASE_URL`, OFF for `DIRECT_URL`). Confirm with `npm run dev` -- they should drop off the missing list.
-2. `npx prisma migrate dev --name init`, then `npx prisma db seed`. Expect `Seeded: 8 live listings, 1 orders, 2 payouts, 5 photos`. Run the seed twice; the counts must not change.
-   - If you see SSL error P1010, add `ssl: { rejectUnauthorized: false }` handling per the Prisma 7 docs.
-3. `npm run dev` -> `/` should show the 8 seeded listings with the five real saree photos. Then delete `src/lib/sample.ts` and its fallback in `src/lib/listings.ts`.
-4. Phase 1 item 5: `src/app/explore/page.tsx` and `src/app/p/[id]/page.tsx` (section 9.2) -- gallery, PayPal button stub, LoomClipPlayer pointing at `/media/loom-handloom.mp4`, JSON-LD.
-5. Then Phase 1 acceptance (section 15) before starting Phase 2.
+**M5 is done. Database is live, migrated and seeded.** Neon project `dry-hat-00498827` (org `org-purple-frog-33617154`), region AWS US East 2, pooled + direct URLs in `.env.local`. Migration `20261110175841_init` applied; `npx prisma db seed` run three times with identical output (`8 live listings, 1 orders, 2 payouts, 5 photos`). `/` serves from the database and leads with the four photographed silk sarees, three carrying the Verified handwoven badge and one deliberately without. `src/lib/sample.ts` and its fallback are deleted.
+
+1. Phase 1 item 5: `src/app/explore/page.tsx` -- search across title, fabric, colour, weave and weaver (Prisma case-insensitive `contains`), filter chips, price sort, grid (section 9.2).
+2. Phase 1 item 5: `src/app/p/[id]/page.tsx` -- gallery, "Woven by {name} in {town}", price block (USD + approx INR + shipping), PayPal button stub, AuthenticityBadge panel with the LoomClipPlayer on `/media/loom-handloom.mp4`, details table, craft story, schema.org Product JSON-LD, Sold state for `seed-l9`.
+3. Run the Phase 1 acceptance tests (section 15) before starting Phase 2.
+4. Phase 2 needs M4 (Gemini key) only when the AI calls go live; `AI_MODE=mock` covers the build until then.
 
 ### Half-done / broken / blocked
-- **Blocked on M5:** migrations and seed haven't run, so `/` still renders `src/lib/sample.ts` and the real photos are not visible yet.
 - `/api/demo-login?role=weaver` and `?role=coop` redirect to `/w` and `/coop`, which don't exist yet (Phase 2/3). The buyer role works end to end today.
 - The same loom clip is reused for every verified listing. Fine for the demo; swap per-piece clips if more arrive.
 - `.gitignore` excludes `src/generated/` (Prisma client). `npm install` regenerates it through the `postinstall` script.
@@ -63,7 +62,7 @@ Never paste these values into chat, commits or screenshots.
 | M2 PayPal sandbox app | Pending |
 | M3 Sandbox accounts | Pending |
 | M4 Gemini key | Pending |
-| M5 Neon | **Neon project created**, but the URLs never got saved into `.env.local` on the session-1 laptop, so migrate/seed haven't run. **First thing next session:** put both URLs in `.env.local` on your laptop |
+| M5 Neon | **Done.** Project created 2026-11-10, migrated and seeded. |
 | M6 Vercel + Blob | Pending (Phase 1 Blob / Phase 5 deploy) |
 | M7 Real content | **Partly done:** 5 saree photos + 1 loom clip supplied and wired into the seed. Still wanted: a photo of the weaver, and her written consent if a real name/face is used. |
 | M8–M12 | Later phases |

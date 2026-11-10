@@ -1,14 +1,10 @@
 import { connection } from "next/server";
 import type { ListingCardData } from "@/components/ListingCard";
-import { env } from "@/lib/env";
-import { SAMPLE_LISTINGS } from "@/lib/sample";
+export type ListingsResult = { listings: ListingCardData[]; source: "db" | "error" };
 
-export type ListingsResult = { listings: ListingCardData[]; source: "db" | "sample" | "error" };
-
-/** LIVE listings for the shop. Fails soft: no DB configured → sample data; DB error → empty + flag. */
+/** LIVE listings for the shop. Fails soft: a DB error returns empty plus a flag the page renders as a friendly message. */
 export async function getLiveListings(take = 24): Promise<ListingsResult> {
   await connection(); // request-time data, never prerendered
-  if (!env.DATABASE_URL) return { listings: SAMPLE_LISTINGS, source: "sample" };
   try {
     const { getDb } = await import("@/lib/db");
     const rows = await getDb().listing.findMany({

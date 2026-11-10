@@ -92,7 +92,13 @@ async function main() {
   });
 
   const confirmedAt = new Date("2026-11-01T10:00:00Z");
-  for (const l of [...LISTINGS, SOLD]) {
+  // Explicit createdAt, newest first, so the home grid ("New from the loom",
+  // ordered createdAt desc) leads with the pieces that have real photographs
+  // rather than the woven placeholders.
+  const listedFrom = new Date("2026-11-08T06:00:00Z").getTime();
+  const all = [...LISTINGS, SOLD];
+  for (const [index, l] of all.entries()) {
+    const createdAt = new Date(listedFrom - index * 3 * 60 * 60 * 1000);
     const status = l.id === SOLD.id ? "SOLD" : "LIVE";
     const data = {
       weaverId: WEAVERS[l.weaver].id,
@@ -117,6 +123,7 @@ async function main() {
       // Real loom clip (M7) in /public/media; verified = clip + co-op confirmation.
       loomClipUrl: l.verified ? LOOM_CLIP : null,
       coopConfirmedAt: l.verified ? confirmedAt : null,
+      createdAt,
     } as const;
     await db.listing.upsert({ where: { id: l.id }, update: data, create: { id: l.id, ...data } });
 

@@ -60,6 +60,7 @@ async function SignedInNotice() {
 
 export default function DemoPage() {
   const buyerEmail = env.SANDBOX_BUYER_EMAIL;
+  const buyerPassword = env.SANDBOX_BUYER_PASSWORD;
 
   return (
     <main className="mx-auto max-w-[1000px] px-4 py-8 md:px-6 md:py-12">
@@ -116,7 +117,7 @@ export default function DemoPage() {
               <dt className="text-ink-muted">Buyer email</dt>
               <dd className="m-0 font-mono">{buyerEmail ?? "— set SANDBOX_BUYER_EMAIL in .env.local (M3)"}</dd>
               <dt className="text-ink-muted">Password</dt>
-              <dd className="m-0">shown in the judging notes, not committed to the repo</dd>
+              <dd className="m-0 font-mono">{buyerPassword ?? "— set SANDBOX_BUYER_PASSWORD in .env.local (M3)"}</dd>
             </dl>
           </div>
         </div>

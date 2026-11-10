@@ -39,6 +39,8 @@ const schema = z.object({
   SANDBOX_BUYER_EMAIL: optionalStr,
   SANDBOX_WEAVER_EMAIL: optionalStr,
   SANDBOX_COOP_EMAIL: optionalStr,
+  /** Shown on /demo so judges can sign in to the sandbox (BUILD_PLAN 9.1). */
+  SANDBOX_BUYER_PASSWORD: optionalStr,
 });
 
 export type Env = z.infer<typeof schema>;

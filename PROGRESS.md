@@ -13,6 +13,8 @@
   - `src/app/demo/page.tsx`: coral hero, three role cards, PayPal-sandbox box (buyer email reads `SANDBOX_BUYER_EMAIL`, shows a "set it in .env.local (M3)" note while empty), repo link. The signed-in notice reads the cookie, so it streams in behind `<Suspense>` per `node_modules/next/dist/docs/01-app/02-guides/authentication-with-cache-components.md`; `/demo` builds as Partial Prerender.
   - Verified by curl: `/demo` 200, buyer login 307 -> `/` with `Set-Cookie`, weaver 307 -> `/w`, bad role 400, signed-in name renders, logout 307 -> `/demo`.
 
+- **Fixed: Tailwind was emitting no utilities at all.** `next.config.ts` ran Tailwind v4 through a `turbopack.rules` `@tailwindcss/turbopack` loader. That silently produced zero utility classes, so every `mx-auto`, `grid`, `md:*`, `bg-coral` etc. in the app was a no-op and both `/` and `/demo` rendered as unstyled full-bleed stacks (only the hand-written `.th-*` CSS worked). Switched to the setup Next 16 documents (`node_modules/next/dist/docs/01-app/01-getting-started/11-css.md`): `@tailwindcss/postcss` + `postcss.config.mjs`, loader rule and `@tailwindcss/turbopack` removed. Checked in the browser at 1280px -- hero, grid, cards and spacing are correct now.
+
 ### Exact next task
 1. **Still blocked on M5.** Put `DATABASE_URL` and `DIRECT_URL` in `.env.local` (Neon project `thari` -> Connect; pooling ON for `DATABASE_URL`, OFF for `DIRECT_URL`). Confirm with `npm run dev` -- they should drop off the missing list.
 2. `npx prisma migrate dev --name init`, then `npx prisma db seed`. Expect `Seeded: 8 live listings, 1 orders, 2 payouts, 5 photos`. Run the seed twice; the counts must not change.

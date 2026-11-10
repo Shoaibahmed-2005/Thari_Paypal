@@ -20,3 +20,10 @@ npm test
 ## License
 
 MIT, see `LICENSE`.
+
+## Credits and media
+
+- **Saree photographs and the loom clip** in `public/media` were supplied by the project owner.
+- **Home page hero** (`public/media/weaver-loom.jpg`): photo by [Sanjay Adhitya](https://www.pexels.com/@sanjay-adhitya-2153341322/) via [Pexels](https://www.pexels.com/photo/indian-weaver-crafting-traditional-textiles-32673642/), used under the Pexels licence (free for commercial use). It shows a real weaver at a pit loom and is not a photograph of any of the seeded weavers, who are fictional.
+- **Sample voice notes** in `public/samples` are Tamil stand-ins for the judge demo path.
+- The seeded weavers, co-op and buyer are fictional; sandbox PayPal accounts move no real money.

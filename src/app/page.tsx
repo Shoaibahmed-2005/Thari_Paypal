@@ -58,8 +58,16 @@ export default function Home() {
               </Link>
             </div>
           </div>
-          <div className="hidden overflow-hidden md:block" style={{ borderRadius: "var(--radius-xl)", minHeight: 320 }}>
-            <PlaceholderImage seed={3} label="Lakshmi at her loom" />
+          {/* Photo: Sanjay Adhitya via Pexels, free licence. Captioned for what it
+              actually is — a real weaver at a pit loom — not as one of the
+              seeded weavers, who are fictional. Credit is in the README. */}
+          <div className="relative hidden overflow-hidden md:block" style={{ borderRadius: "var(--radius-xl)", minHeight: 320 }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/media/weaver-loom.jpg"
+              alt="A weaver at a pit loom in South India, working a red silk warp"
+              className="h-full w-full object-cover"
+            />
           </div>
         </section>
 

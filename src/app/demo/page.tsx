@@ -19,7 +19,7 @@ const ROLES = [
     icon: Spool,
     name: "Weaver — Lakshmi",
     where: "Kanchipuram, Tamil Nadu",
-    blurb: "Phone view, Tamil first. Record a voice note and the AI writes the listing. She hears when a piece sells.",
+    blurb: "Phone view, in her own language — Tamil in this demo. Record a voice note and the AI writes the listing. She hears when a piece sells.",
     goes: "/w",
   },
   {
@@ -73,8 +73,8 @@ export default function DemoPage() {
       >
         <h1 className="t-display m-0">Try Thari in 3 roles</h1>
         <p className="t-body m-0 max-w-[60ch]">
-          Thari lets a handloom weaver in Tamil Nadu sell worldwide using only her voice, with proof each piece is
-          genuinely handwoven. Pick a role below — one click signs you in as that person.
+          Thari lets a handloom weaver sell worldwide using only her voice, in whichever language she speaks, with
+          proof each piece is genuinely handwoven. Pick a role below — one click signs you in as that person.
         </p>
         <Suspense fallback={null}>
           <SignedInNotice />

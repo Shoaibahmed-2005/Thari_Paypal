@@ -86,6 +86,11 @@ npm test
 Needs Node 22+.
 
 ### Deviations from BUILD_PLAN.md and why
+- **The weaver's language is a setting, not Tamil hardcoded** (decided 2026-11-10, deviates from BUILD_PLAN sections 7, 9.3 and 10). BUILD_PLAN assumed Tamil everywhere, down to the column names. The app is now language-agnostic: `User.preferredLang` (chosen at sign-up, changeable in settings), `Listing.lang` snapshotting what she actually spoke for that piece so an old listing stays correct if she switches, and `Notification.lang`. Renamed `titleTa` -> `titleNative`, `transcriptTa` -> `transcriptNative`, `readbackTa` -> `readbackNative`, `bioTa` -> `bioNative`, `textTa` -> `textNative`. `src/lib/languages.ts` holds the supported set (Tamil, Hindi, Telugu, Bengali, English) plus a font stack per script. Gemini handles all of them natively, so the AI side becomes a prompt parameter rather than separate code paths.
+  - **Why now:** the language was baked into database columns, and the first migration had not run yet. Doing this later would have meant a second migration against live demo data close to the deadline.
+  - **Still to do when Phase 2 builds `/w`:** the weaver UI's own hardcoded strings need a dictionary per language, the language picker at sign-up and in settings, and `next/font` loading for Devanagari, Telugu and Bengali. Brand tokens, including `--font-tamil`, are untouched.
+  - **The demo still runs in Tamil** (seeded weavers have `preferredLang: "ta"`), so the recorded footage and sample voice note stay valid.
+
 - **Prisma 7.10.1, not npm `latest`:** the `latest` tag currently points to an 8.0 release candidate. Prisma 7 changes the setup:
   - generator `prisma-client` with output `src/generated/prisma` (import from `@/generated/prisma/client`)
   - no `url`/`directUrl` in `schema.prisma`; the CLI uses `DIRECT_URL` from `prisma.config.ts`, and the app uses pooled `DATABASE_URL` via `@prisma/adapter-neon` (Neon's recommendation)

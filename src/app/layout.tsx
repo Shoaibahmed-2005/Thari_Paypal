@@ -29,7 +29,7 @@ const fraunces = Fraunces({
 
 export const metadata: Metadata = {
   title: "Thari — handwoven, sold by the weaver",
-  description: "Tamil Nadu handloom, sold directly by the weavers who made it.",
+  description: "Indian handloom, sold directly by the weavers who made it — in their own language.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

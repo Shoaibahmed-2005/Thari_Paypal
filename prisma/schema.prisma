@@ -68,7 +68,8 @@ model User {
   role          Role
   name          String
   town          String?
-  bioTa         String?
+  preferredLang String         @default("ta") // BCP-47; the language she speaks to the app in
+  bioNative     String? // bio in her own language
   bioEn         String?
   photoUrl      String?
   paypalEmail   String? // sandbox receiver for payouts (weaver)
@@ -87,7 +88,8 @@ model Listing {
   weaver           User          @relation(fields: [weaverId], references: [id])
   status           ListingStatus @default(DRAFT)
   title            String?
-  titleTa          String? // short Tamil name, used in the sale notification (section 10.4)
+  lang             String        @default("ta") // language she actually spoke for THIS listing
+  titleNative      String? // short name in her language, used in the sale notification (section 10.4)
   description      String?
   story            String?
   category         String? // saree | dupatta | stole | fabric
@@ -105,10 +107,10 @@ model Listing {
   photos           Photo[]
   loomClipUrl      String?
   voiceNoteUrl     String?
-  transcriptTa     String?
+  transcriptNative String?
   transcriptEn     String?
   pendingQuestions Json?
-  readbackTa       String?
+  readbackNative   String?
   readbackAudioUrl String?
   aiRaw            Json?
   coopConfirmedAt  DateTime?
@@ -166,16 +168,17 @@ model Payout {
 }
 
 model Notification {
-  id        String    @id @default(cuid())
-  userId    String
-  user      User      @relation(fields: [userId], references: [id])
-  kind      String // SOLD | PAYOUT | QUESTION | SHIPPED_REMINDER
-  textTa    String
-  textEn    String
-  audioUrl  String?
-  orderId   String?
-  heardAt   DateTime?
-  createdAt DateTime  @default(now())
+  id         String    @id @default(cuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id])
+  kind       String // SOLD | PAYOUT | QUESTION | SHIPPED_REMINDER
+  lang       String    @default("ta")
+  textNative String
+  textEn     String
+  audioUrl   String?
+  orderId    String?
+  heardAt    DateTime?
+  createdAt  DateTime  @default(now())
 }
 
 model WebhookEvent {

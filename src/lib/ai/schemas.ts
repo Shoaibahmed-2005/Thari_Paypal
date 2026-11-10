@@ -131,3 +131,23 @@ export function coerceAnswer(field: MissingField, value: Answer["value"]): unkno
       return typeof value === "string" && value.trim() !== "" ? value.trim() : null;
   }
 }
+
+/**
+ * A saree with no length should always prompt a question — it is the step
+ * that shows the AI asking her something, in her own language. The model
+ * usually writes one, but not every time, so this is the guaranteed fallback.
+ */
+export function lengthQuestionFor(lang: string): Question {
+  const byLang: Record<string, string> = {
+    ta: "புடவை எத்தனை மீட்டர்?",
+    hi: "साड़ी कितने मीटर की है?",
+    te: "చీర ఎన్ని మీటర్లు?",
+    bn: "শাড়িটি কত মিটার?",
+    en: "How many metres is the saree?",
+  };
+  return {
+    field: "lengthMeters",
+    questionNative: byLang[lang] ?? byLang.en,
+    questionEn: "How many metres is the saree?",
+  };
+}

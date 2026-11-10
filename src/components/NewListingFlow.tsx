@@ -27,6 +27,28 @@ type Step = "speak" | "photos" | "clip" | "working" | "questions" | "readback" |
 
 const ORDER: Step[] = ["speak", "photos", "clip", "working", "questions", "readback", "done"];
 
+/**
+ * The real Tamil recordings that ship with the app (BUILD_PLAN 14.3 / M8),
+ * for judges who don't speak Tamil. They are AAC in an MP4 container, which
+ * is what a phone records and what Gemini accepts.
+ */
+const SAMPLE_VOICE = { url: "/samples/sample-voice-ta.m4a", mimeType: "audio/aac" };
+const SAMPLE_ANSWER = { url: "/samples/sample-answer-ta.m4a", mimeType: "audio/aac" };
+
+async function loadSample(s: { url: string; mimeType: string }): Promise<Recording> {
+  const blob = await fetch(s.url).then((r) => {
+    if (!r.ok) throw new Error("Could not load the sample recording.");
+    return r.blob();
+  });
+  const data = await new Promise<string>((resolve, reject) => {
+    const fr = new FileReader();
+    fr.onload = () => resolve(String(fr.result).split(",")[1] ?? "");
+    fr.onerror = reject;
+    fr.readAsDataURL(blob);
+  });
+  return { mimeType: s.mimeType, data, previewUrl: s.url, seconds: 0 };
+}
+
 /** Quick-answer chips for the fields where tapping beats speaking (9.3 step 5). */
 const CHIPS: Record<string, { label: string; value: string }[]> = {
   fabric: [
@@ -92,7 +114,11 @@ export function NewListingFlow({
     }
   }
 
-  async function sendAnswer(field: string, typedAnswer?: string) {
+  async function sendAnswerWith(field: string, rec: Recording) {
+    return sendAnswer(field, undefined, rec);
+  }
+
+  async function sendAnswer(field: string, typedAnswer?: string, rec?: Recording) {
     if (!draft) return;
     setBusy(true);
     setError(null);
@@ -103,7 +129,10 @@ export function NewListingFlow({
         body: JSON.stringify({
           field,
           typedAnswer,
-          audio: !typedAnswer && answerAudio ? { mimeType: answerAudio.mimeType, data: answerAudio.data } : undefined,
+          audio: (() => {
+            const a = rec ?? answerAudio;
+            return !typedAnswer && a ? { mimeType: a.mimeType, data: a.data } : undefined;
+          })(),
         }),
       });
       const body = await res.json();
@@ -190,9 +219,19 @@ export function NewListingFlow({
           <button
             type="button"
             className="th-btn th-btn--secondary th-btn--block"
-            onClick={() => {
-              setUsedSample(true);
-              setStep("photos");
+            disabled={busy}
+            onClick={async () => {
+              setBusy(true);
+              setError(null);
+              try {
+                setAudio(await loadSample(SAMPLE_VOICE));
+                setUsedSample(true);
+                setStep("photos");
+              } catch (err) {
+                setError(err instanceof Error ? err.message : t.somethingWrong);
+              } finally {
+                setBusy(false);
+              }
             }}
           >
             {t.useSample}
@@ -353,6 +392,28 @@ export function NewListingFlow({
           >
             {t.next}
           </button>
+          {usedSample && questions[0].field === "lengthMeters" && (
+            <button
+              type="button"
+              className="th-btn th-btn--secondary th-btn--block"
+              disabled={busy}
+              onClick={async () => {
+                setBusy(true);
+                setError(null);
+                try {
+                  const rec = await loadSample(SAMPLE_ANSWER);
+                  setAnswerAudio(rec);
+                  await sendAnswerWith(questions[0].field, rec);
+                } catch (err) {
+                  setError(err instanceof Error ? err.message : t.somethingWrong);
+                } finally {
+                  setBusy(false);
+                }
+              }}
+            >
+              {t.useSample}
+            </button>
+          )}
         </>
       )}
 

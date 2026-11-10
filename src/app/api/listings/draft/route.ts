@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
 import { extractListing } from "@/lib/ai/listing";
 import { AiError } from "@/lib/ai/client";
-import { missingRequired } from "@/lib/ai/schemas";
+import { lengthQuestionFor, missingRequired } from "@/lib/ai/schemas";
 import { env } from "@/lib/env";
 import { inrToUsdCents } from "@/lib/money";
 import { getWeaver, weaverContext } from "@/lib/weaver";
@@ -51,6 +51,15 @@ export async function POST(req: NextRequest) {
   const askAbout = extracted.questions.filter(
     (q) => missing.includes(q.field) || q.field === "lengthMeters",
   );
+  // The model is asked to always question a saree's missing length, but it
+  // doesn't always comply, so guarantee it here.
+  if (
+    extracted.category === "saree" &&
+    extracted.lengthMeters == null &&
+    !askAbout.some((q) => q.field === "lengthMeters")
+  ) {
+    askAbout.push(lengthQuestionFor(weaver.preferredLang));
+  }
   const status = askAbout.length > 0 ? "NEEDS_ANSWERS" : "READY_TO_CONFIRM";
 
   const { getDb } = await import("@/lib/db");

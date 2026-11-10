@@ -3,10 +3,12 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Truck } from "lucide-react";
 import { Gallery } from "@/components/Gallery";
+import { PayPalButton } from "@/components/PayPalButton";
 import { LoomClipPlayer } from "@/components/LoomClipPlayer";
 import { BuyerBottomNav, TopNav } from "@/components/Nav";
 import { AuthenticityBadge, StatusChip } from "@/components/ui";
 import { env } from "@/lib/env";
+import { WEB_SDK_ORIGIN } from "@/lib/paypal/client";
 import { getListingDetail, type ListingDetail } from "@/lib/listings";
 import { formatInr, formatUsd, usdCentsToInr } from "@/lib/money";
 
@@ -106,9 +108,12 @@ async function Product({ params }: { params: PageProps<"/p/[id]">["params"] }) {
               Sold
             </button>
           ) : (
-            <button className="th-btn th-btn--primary th-btn--block" disabled title="PayPal checkout arrives in Phase 4">
-              Pay with PayPal
-            </button>
+            <PayPalButton
+              listingId={l.id}
+              clientId={env.NEXT_PUBLIC_PAYPAL_CLIENT_ID ?? null}
+              sdkOrigin={WEB_SDK_ORIGIN[env.PAYPAL_ENV]}
+              amount={((priceCents + shippingUsd * 100) / 100).toFixed(2)}
+            />
           )}
           <p className="t-caption m-0 text-center text-ink-muted">
             <Truck size={14} strokeWidth={1.75} aria-hidden className="inline align-[-2px]" /> Ships from Tamil Nadu,

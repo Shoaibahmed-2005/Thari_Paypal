@@ -1,30 +1,33 @@
 # Progress
 
-## HANDOFF (end of session 1, 2026-11-09)
+## HANDOFF (session 2, 2026-11-10)
 
-### Done and verified (`npm test` 12/12, `tsc --noEmit`, `eslint src prisma`, `npm run dev` → 200)
-- **Phase 0: complete and pushed.** Next.js 16.4.5 (App Router, TS strict, Tailwind v4, ESLint, `src/`), Prettier, Vitest 5, MIT LICENSE, `.gitignore`, `.env.example`, README stub, `src/lib/env.ts` (Zod; dev prints missing vars, production throws), `src/instrumentation.ts` runs the check at startup.
-- **Phase 1, partly done:**
-  - [x] 1. `src/app/globals.css`: section 8 tokens (verbatim) + component CSS + typography classes; fonts via `next/font` in `src/app/layout.tsx` (Manrope, Noto Sans Tamil, Fraunces).
-  - [x] 2. Components: `src/components/ui.tsx` (Button, IconButton, TextField, StatusChip, AuthenticityBadge, PlaceholderImage, Wordmark), `src/components/ListingCard.tsx`, `src/components/Nav.tsx` (TopNav, BuyerBottomNav, WeaverBottomNav).
-  - [~] 3. Prisma: **code done, not yet run against a database.** `prisma/schema.prisma` (section 7 + `titleTa` from 10.4), `prisma.config.ts`, `src/lib/db.ts` (Neon adapter), `prisma/seed.ts` (idempotent: co-op, 3 weavers, buyer, co-op admin, 8 LIVE listings with 6 verified, 1 SOLD with PAID order + 2 succeeded payouts + heard notification). `prisma validate` and `prisma generate` pass. **Migrate + seed wait on M5.**
-  - [ ] 4. Session + `/api/demo-login` + `/demo`. Not started.
-  - [~] 5. Buyer home `/` reads LIVE listings from the DB (`src/lib/listings.ts`, streamed in `<Suspense>`). With no `DATABASE_URL` it falls back to `src/lib/sample.ts`; on a DB error it shows a friendly message. Checked at 375px and 1280px. `/explore` and `/p/[id]` not started.
-  - [x] 6. `src/lib/money.ts` + `src/lib/fsm.ts` with tests.
+### Done and verified this session (`npm test` 12/12, `tsc --noEmit`, `eslint src prisma`, `npm run build` clean, `npm run dev` -> 200)
+- **Repo set up on Shoaib's laptop** (`D:	hari_paypal`): `git init` + `origin` + `main`, local `user.name`/`user.email` set, `npm install` (578 packages, Node 24.14.1).
+- **`.env.local` created** from `.env.example` with a freshly generated `SESSION_SECRET` and `AI_MODE=mock`. Everything else still empty.
+- **M7 media (partial): real saree photos and loom clip are in.** Five supplied photos and one handloom clip moved to `/public/media` as `seed-l1-1.jpg`, `seed-l2-1.jpg`, `seed-l3-1.jpg`, `seed-l4-1.jpg`, `seed-l9-1.jpg`, `loom-handloom.mp4` (all committed; ~5.9 MB total). `prisma/seed.ts` now creates `Photo` rows for those five listings (fixed ids `<listingId>-pN`, upserted, so re-seeding does not duplicate), and `loomClipUrl` on verified listings points at the real clip instead of the `/media/placeholder-loom.mp4` path that never existed. Seed titles, colours, motifs and descriptions for l1-l4 and l9 were rewritten to match what is actually in each photo. The other four listings (cotton sarees, dupatta) keep the woven `PlaceholderImage`, which also keeps the verified/unverified contrast visible.
+- **Phase 1 item 4 done: session + demo logins.**
+  - `src/lib/session.ts`: iron-session 9, cookie `thari_session` `{ userId, role, name }`, httpOnly, sameSite lax, secure in production, 7-day maxAge. `DEMO_ROLES` maps weaver/buyer/coop to the seeded user ids. `getCurrentUser()` calls `unstable_rethrow` first so Next's own control-flow errors are not swallowed. Dev-only fallback password so the app boots before `SESSION_SECRET` exists; production still throws via `env.ts`.
+  - `src/app/api/demo-login/route.ts`: `?role=weaver|buyer|coop` -> sets session, 307 to `/w`, `/` or `/coop`. Bad role -> 400. In-memory per-IP rate limit (20/min).
+  - `src/app/api/logout/route.ts`: GET or POST, destroys the session, 307 to `/demo`.
+  - `src/app/demo/page.tsx`: coral hero, three role cards, PayPal-sandbox box (buyer email reads `SANDBOX_BUYER_EMAIL`, shows a "set it in .env.local (M3)" note while empty), repo link. The signed-in notice reads the cookie, so it streams in behind `<Suspense>` per `node_modules/next/dist/docs/01-app/02-guides/authentication-with-cache-components.md`; `/demo` builds as Partial Prerender.
+  - Verified by curl: `/demo` 200, buyer login 307 -> `/` with `Set-Cookie`, weaver 307 -> `/w`, bad role 400, signed-in name renders, logout 307 -> `/demo`.
 
 ### Exact next task
-1. **Fill in `DATABASE_URL` and `DIRECT_URL` in `.env.local`** (M5, see "Create .env.local" below). The Neon project already exists: open it → Connect, and copy both strings. Save the file, then confirm with `npm run dev` (they should no longer be listed as missing).
-2. Run `npx prisma migrate dev --name init`, then `npx prisma db seed`. Expect "Seeded: 8 live listings, 1 orders, 2 payouts". Run the seed twice to confirm nothing duplicates.
+1. **Still blocked on M5.** Put `DATABASE_URL` and `DIRECT_URL` in `.env.local` (Neon project `thari` -> Connect; pooling ON for `DATABASE_URL`, OFF for `DIRECT_URL`). Confirm with `npm run dev` -- they should drop off the missing list.
+2. `npx prisma migrate dev --name init`, then `npx prisma db seed`. Expect `Seeded: 8 live listings, 1 orders, 2 payouts, 5 photos`. Run the seed twice; the counts must not change.
    - If you see SSL error P1010, add `ssl: { rejectUnauthorized: false }` handling per the Prisma 7 docs.
-3. `npm run dev` → `/` should show the 8 seeded listings (not the sample ones). Then delete `src/lib/sample.ts` and its fallback in `src/lib/listings.ts`.
-4. Phase 1 item 4: `src/lib/session.ts` (iron-session, cookie `thari_session`), `src/app/api/demo-login/route.ts`, `src/app/api/logout/route.ts`, `src/app/demo/page.tsx` (section 9.1).
-5. Phase 1 item 5: `src/app/explore/page.tsx`, `src/app/p/[id]/page.tsx` (section 9.2, PayPal button stub, JSON-LD).
+3. `npm run dev` -> `/` should show the 8 seeded listings with the five real saree photos. Then delete `src/lib/sample.ts` and its fallback in `src/lib/listings.ts`.
+4. Phase 1 item 5: `src/app/explore/page.tsx` and `src/app/p/[id]/page.tsx` (section 9.2) -- gallery, PayPal button stub, LoomClipPlayer pointing at `/media/loom-handloom.mp4`, JSON-LD.
+5. Then Phase 1 acceptance (section 15) before starting Phase 2.
 
 ### Half-done / broken / blocked
-- **Blocked on M5:** migrations and seed haven't run.
+- **Blocked on M5:** migrations and seed haven't run, so `/` still renders `src/lib/sample.ts` and the real photos are not visible yet.
+- `/api/demo-login?role=weaver` and `?role=coop` redirect to `/w` and `/coop`, which don't exist yet (Phase 2/3). The buyer role works end to end today.
+- The same loom clip is reused for every verified listing. Fine for the demo; swap per-piece clips if more arrive.
 - `.gitignore` excludes `src/generated/` (Prisma client). `npm install` regenerates it through the `postinstall` script.
 - Category chips on `/` are visual only (no filtering yet).
-- The seed uses `/media/placeholder-loom.mp4` as the loom clip URL for verified pieces until M7 real media exists. The file doesn't exist yet; the product page should show the woven placeholder when the video fails.
+
 - Pushing from the friend's laptop: browser sign-in there uses the owner's GitHub account. Use Git Credential Manager's token dialog: `git -c credential.gitHubAuthModes=pat push`. On your own laptop a normal push is fine.
 
 ### Create `.env.local` (do this first on any new machine)
@@ -60,7 +63,8 @@ Never paste these values into chat, commits or screenshots.
 | M4 Gemini key | Pending |
 | M5 Neon | **Neon project created**, but the URLs never got saved into `.env.local` on the session-1 laptop, so migrate/seed haven't run. **First thing next session:** put both URLs in `.env.local` on your laptop |
 | M6 Vercel + Blob | Pending (Phase 1 Blob / Phase 5 deploy) |
-| M7–M12 | Later phases |
+| M7 Real content | **Partly done:** 5 saree photos + 1 loom clip supplied and wired into the seed. Still wanted: a photo of the weaver, and her written consent if a real name/face is used. |
+| M8–M12 | Later phases |
 
 ### Env vars (names only)
 On the session-1 laptop, `.env.local` had only `SESSION_SECRET` (generated) and `AI_MODE=mock`; everything else was empty. Your own laptop needs a fresh `.env.local` (see above).

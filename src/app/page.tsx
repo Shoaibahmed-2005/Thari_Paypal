@@ -3,10 +3,9 @@ import { Search, Sparkles } from "lucide-react";
 import { ListingCard } from "@/components/ListingCard";
 import { BuyerBottomNav, TopNav } from "@/components/Nav";
 import { PlaceholderImage } from "@/components/ui";
-import { getLiveListings } from "@/lib/listings";
+import { CATEGORIES, getLiveListings } from "@/lib/listings";
 import { Suspense } from "react";
 
-const CATEGORIES = ["All", "Silk sarees", "Cotton sarees", "Dupattas"];
 const GRID = "grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-6 lg:grid-cols-4";
 
 async function NewFromTheLoom() {
@@ -72,10 +71,14 @@ export default function Home() {
           </div>
         </form>
         <div className="th-row mt-4">
-          {CATEGORIES.map((c, i) => (
-            <button key={c} className="th-chip th-chip--select" aria-pressed={i === 0}>
-              {c}
-            </button>
+          {CATEGORIES.map((c) => (
+            <Link
+              key={c.key}
+              href={c.key === "all" ? "/explore" : `/explore?category=${c.key}`}
+              className="th-chip th-chip--select"
+            >
+              {c.label}
+            </Link>
           ))}
         </div>
 

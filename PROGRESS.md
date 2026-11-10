@@ -15,19 +15,27 @@
 
 - **Fixed: Tailwind was emitting no utilities at all.** `next.config.ts` ran Tailwind v4 through a `turbopack.rules` `@tailwindcss/turbopack` loader. That silently produced zero utility classes, so every `mx-auto`, `grid`, `md:*`, `bg-coral` etc. in the app was a no-op and both `/` and `/demo` rendered as unstyled full-bleed stacks (only the hand-written `.th-*` CSS worked). Switched to the setup Next 16 documents (`node_modules/next/dist/docs/01-app/01-getting-started/11-css.md`): `@tailwindcss/postcss` + `postcss.config.mjs`, loader rule and `@tailwindcss/turbopack` removed. Checked in the browser at 1280px -- hero, grid, cards and spacing are correct now.
 
-### Exact next task
-**M5 is done. Database is live, migrated and seeded.** Neon project `dry-hat-00498827` (org `org-purple-frog-33617154`), region AWS US East 2, pooled + direct URLs in `.env.local`. Migration `20261110175841_init` applied; `npx prisma db seed` run three times with identical output (`8 live listings, 1 orders, 2 payouts, 5 photos`). `/` serves from the database and leads with the four photographed silk sarees, three carrying the Verified handwoven badge and one deliberately without. `src/lib/sample.ts` and its fallback are deleted.
+### Phase 1 is COMPLETE. Acceptance (section 15) passed 2026-11-10
+- `/demo` 200 -> Buyer login 307 -> `/` shows all **8** seeded listings in brand styling, checked at **390px and 1280px**.
+- `/p/[id]` complete: gallery with thumbnails, Tamil sub-title, "Woven by ... in ...", price block (USD + approx INR + $20 shipping), PayPal button stub, full AuthenticityBadge panel, LoomClipPlayer serving the real 10s clip (200, 5.3 MB), details table, craft story, schema.org Product JSON-LD. `seed-l9` correctly shows the Sold chip and a disabled button.
+- `/explore` server-side search across title, description, fabric, weave, colour and weaver name, plus category chips (All / Silk / Cotton / Dupattas), three sorts and an empty state. Home chips link through to it.
+- `npm run build` clean, `tsc --noEmit` clean, `eslint src prisma` clean, `npm test` 12/12.
 
-1. Phase 1 item 5: `src/app/explore/page.tsx` -- search across title, fabric, colour, weave and weaver (Prisma case-insensitive `contains`), filter chips, price sort, grid (section 9.2).
-2. Phase 1 item 5: `src/app/p/[id]/page.tsx` -- gallery, "Woven by {name} in {town}", price block (USD + approx INR + shipping), PayPal button stub, AuthenticityBadge panel with the LoomClipPlayer on `/media/loom-handloom.mp4`, details table, craft story, schema.org Product JSON-LD, Sold state for `seed-l9`.
-3. Run the Phase 1 acceptance tests (section 15) before starting Phase 2.
-4. Phase 2 needs M4 (Gemini key) only when the AI calls go live; `AI_MODE=mock` covers the build until then.
+### Exact next task
+**Phase 2 — weaver listing creation with AI** (BUILD_PLAN section 15, screens in 9.3, AI design in 10).
+1. `/w` weaver home: greeting, latest unheard notification card with play button, "sell a new piece" button, my-pieces list with StatusChips, money summary. Note the weaver demo login already redirects here, so `/w` is currently a 404 -- this closes that.
+2. `/w/new` step flow (9.3): speak -> photos -> loom clip -> working -> questions -> read-back and confirm -> done.
+3. `src/lib/ai/` with `AI_MODE=mock` fixtures first, so the whole flow runs before M4 (Gemini key) arrives.
+4. **Carry the language work through:** the weaver UI's hardcoded strings need a per-language dictionary keyed off `User.preferredLang` (see `src/lib/languages.ts`), plus the language picker and `next/font` loading for Devanagari, Telugu and Bengali. The AI prompts take the language as a parameter, not a hardcoded "Tamil".
+5. `/coop` is also still a 404; it is Phase 4.
 
 ### Half-done / broken / blocked
-- `/api/demo-login?role=weaver` and `?role=coop` redirect to `/w` and `/coop`, which don't exist yet (Phase 2/3). The buyer role works end to end today.
+- `/api/demo-login?role=weaver` and `?role=coop` redirect to `/w` and `/coop`, which don't exist yet (Phase 2 and Phase 4). The buyer role works end to end today.
 - The same loom clip is reused for every verified listing. Fine for the demo; swap per-piece clips if more arrive.
 - `.gitignore` excludes `src/generated/` (Prisma client). `npm install` regenerates it through the `postinstall` script.
-- Category chips on `/` are visual only (no filtering yet).
+- `/weavers/[id]` is linked from the product page but not built yet (Phase 2).
+- Colour search matches a colour array element exactly; partial colour words are caught by the title search instead.
+- The authenticity panel shows no "filmed on" date: no filming date is recorded until the Phase 2 upload flow captures one, and inventing one on a trust badge is worse than omitting it.
 
 - Pushing from the friend's laptop: browser sign-in there uses the owner's GitHub account. Use Git Credential Manager's token dialog: `git -c credential.gitHubAuthModes=pat push`. On your own laptop a normal push is fine.
 

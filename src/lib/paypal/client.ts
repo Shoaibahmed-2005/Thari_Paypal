@@ -12,11 +12,7 @@ const BASE = {
   live: "https://api-m.paypal.com",
 } as const;
 
-/** The browser SDK loads from a different host than the REST API (11.1). */
-export const WEB_SDK_ORIGIN = {
-  sandbox: "https://www.sandbox.paypal.com",
-  live: "https://www.paypal.com",
-} as const;
+export { WEB_SDK_ORIGIN } from "./config";
 
 export function paypalBaseUrl(): string {
   return BASE[env.PAYPAL_ENV];

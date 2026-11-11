@@ -1,6 +1,8 @@
 # Thari (தறி)
 
-**A handloom weaver in Tamil Nadu lists a saree by speaking to her phone. A buyer in Boston pays with PayPal. The money splits to the weaver and her co-op automatically, and she hears about it in her own language.**
+**A maker sells to the world by speaking to her phone, and the buyer can see proof the thing was made by hand.**
+
+A handloom weaver in Tamil Nadu lists a saree by voice. A buyer in Boston pays with PayPal. The money splits to the weaver and her co-op automatically, and she hears about it in her own language. The demo is handloom; [the mechanism isn't](#where-this-goes).
 
 Built for the [PayPal AI Hackathon 2026](https://paypalaihackathon.devpost.com/).
 
@@ -131,6 +133,18 @@ src/
 prisma/                schema, migration, idempotent seed
 docs/                  the full build plan and the running progress log
 ```
+
+## Where this goes
+
+The demo is handloom because a demo should be one thing done completely. The product isn't.
+
+**Already craft-agnostic, in this codebase:** everything after the listing exists. Checkout, the weaver/co-op split, payouts, refunds, the order state machine, the sale notification in her language, the assistant and the MCP endpoint — none of it knows what a saree is. Listings carry a `category`, and the weaver's language is a setting (Tamil, Hindi, Telugu, Bengali, English today; Gemini handles far more).
+
+**The verification idea generalises, which is the part that matters.** The badge isn't "we checked a certificate", it's *film the making, and have a second party who knows the craft vouch for the footage*. A potter films the wheel. A Rajasthani bangle-maker films the lac work. A Channapatna toymaker films the lathe. Same loom clip, same co-op confirmation, same gold badge — and co-operative societies already exist across Indian crafts, so the human institution is there too.
+
+**What a new craft would need:** its own listing attributes (a saree has `fabric`, `weave`, `lengthMeters`, `includesBlouse`; a bangle has size, metal, technique) and a matching extraction prompt. That's a schema and a prompt per craft, not a rewrite.
+
+**What it would need beyond that:** food and perishables carry different export paperwork from textiles, so the document generation is genuinely per-category work.
 
 ## Known limitations
 

@@ -3,12 +3,15 @@ import type { ListingCardData } from "@/components/ListingCard";
 
 export type ListingsResult = { listings: ListingCardData[]; source: "db" | "error" };
 
-/** Category chips on `/` and `/explore` (BUILD_PLAN 9.2). */
+/**
+ * Category chips on `/` and `/explore` (BUILD_PLAN 9.2). Dupattas is omitted
+ * while the shop holds none: a filter that always returns nothing is worse
+ * than one fewer filter. Add it back with the first dupatta.
+ */
 export const CATEGORIES = [
   { key: "all", label: "All" },
   { key: "silk", label: "Silk sarees" },
   { key: "cotton", label: "Cotton sarees" },
-  { key: "dupatta", label: "Dupattas" },
 ] as const;
 
 export type CategoryKey = (typeof CATEGORIES)[number]["key"];
@@ -98,10 +101,9 @@ export async function searchListings({ q, category = "all", sort = "new" }: Sear
       category === "silk"
         ? { category: "saree", fabric: { contains: "silk", mode: "insensitive" as const } }
         : category === "cotton"
-          ? { category: "saree", fabric: { equals: "cotton", mode: "insensitive" as const } }
-          : category === "dupatta"
-            ? { category: "dupatta" }
-            : {};
+          ? // "cotton" includes silk-cotton, which is what a buyer means.
+            { category: "saree", fabric: { contains: "cotton", mode: "insensitive" as const } }
+          : {};
 
     const textWhere = term
       ? {

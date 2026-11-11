@@ -3,6 +3,7 @@ import { z } from "zod";
 import { env } from "@/lib/env";
 import { PayPalError, PayPalNotConfiguredError, isPayPalConfigured } from "@/lib/paypal/client";
 import { createPayPalOrder } from "@/lib/paypal/orders";
+import { orderTotals } from "@/lib/money";
 import { getCurrentUser } from "@/lib/session";
 
 /**
@@ -42,8 +43,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "This piece has no price yet." }, { status: 409 });
   }
 
-  const itemUsdCents = listing.priceUsdCents;
-  const shippingUsdCents = Math.round(env.SHIPPING_USD * 100);
+  const totals = orderTotals(listing.priceUsdCents, env.SHIPPING_USD);
   const session = await getCurrentUser();
 
   // Our row first, so the PayPal order can carry our id as custom_id and the
@@ -55,9 +55,7 @@ export async function POST(req: NextRequest) {
       status: "CREATED",
       channel: parsed.data.channel,
       paypalOrderId: `pending-${crypto.randomUUID()}`,
-      itemUsdCents,
-      shippingUsdCents,
-      totalUsdCents: itemUsdCents + shippingUsdCents,
+      ...totals,
     },
   });
 
@@ -74,8 +72,8 @@ export async function POST(req: NextRequest) {
       ourOrderId: order.id,
       listingId: listing.id,
       title: listing.title ?? "Handwoven piece",
-      itemUsdCents,
-      shippingUsdCents,
+      itemUsdCents: totals.itemUsdCents,
+      shippingUsdCents: totals.shippingUsdCents,
       imageUrl,
     });
 

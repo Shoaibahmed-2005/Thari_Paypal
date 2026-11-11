@@ -44,3 +44,8 @@ next-env.d.ts
 !.env.example
 content/raw/
 /src/generated/
+
+# archives and scratch media should never be committed
+*.zip
+*.rar
+*.7z

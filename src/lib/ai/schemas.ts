@@ -20,17 +20,7 @@ export const MISSING_FIELDS = [
 
 export type MissingField = (typeof MISSING_FIELDS)[number];
 
-/** Must all be present before a draft can move to READY_TO_CONFIRM (10.1). */
-export const REQUIRED_BEFORE_CONFIRM = [
-  "category",
-  "fabric",
-  "colors",
-  "priceInr",
-  "includesBlouse",
-  "stitched",
-] as const satisfies readonly MissingField[];
-
-export const QuestionSchema = z.object({
+const QuestionSchema = z.object({
   field: z.enum(MISSING_FIELDS),
   /** The question as she will hear it, in her language. */
   questionNative: z.string().min(1),

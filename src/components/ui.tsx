@@ -1,4 +1,3 @@
-import type { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode } from "react";
 import {
   BadgeCheck,
   Check,
@@ -12,65 +11,6 @@ import {
 } from "lucide-react";
 
 const cx = (...c: (string | false | null | undefined)[]) => c.filter(Boolean).join(" ");
-
-/* ---------- Button ---------- */
-type ButtonVariant = "primary" | "secondary" | "ghost";
-export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: ButtonVariant;
-  block?: boolean;
-  icon?: ReactNode;
-}
-export function Button({ variant = "primary", block, icon, className, children, ...rest }: ButtonProps) {
-  return (
-    <button
-      className={cx("th-btn", `th-btn--${variant}`, block && "th-btn--block", className)}
-      {...rest}
-    >
-      {icon}
-      {children}
-    </button>
-  );
-}
-
-/** Icon-only button; aria-label is required. */
-export function IconButton({
-  label,
-  children,
-  className,
-  ...rest
-}: ButtonHTMLAttributes<HTMLButtonElement> & { label: string }) {
-  return (
-    <button aria-label={label} className={cx("th-icon-btn", className)} {...rest}>
-      {children}
-    </button>
-  );
-}
-
-/* ---------- TextField ---------- */
-export interface TextFieldProps extends InputHTMLAttributes<HTMLInputElement> {
-  label?: string;
-  hint?: string;
-  error?: string;
-  icon?: ReactNode;
-  search?: boolean;
-}
-export function TextField({ label, hint, error, icon, search, id, className, ...rest }: TextFieldProps) {
-  const inputId = id ?? rest.name;
-  return (
-    <div className={cx("th-field", search && "th-field--search", error && "th-field--error", className)}>
-      {label && (
-        <label className="th-field__label" htmlFor={inputId}>
-          {label}
-        </label>
-      )}
-      <div className="th-field__box">
-        {icon}
-        <input id={inputId} className="th-field__input" {...rest} />
-      </div>
-      {(error || hint) && <span className="th-field__hint">{error ?? hint}</span>}
-    </div>
-  );
-}
 
 /* ---------- StatusChip (always icon + word) ---------- */
 export type ChipStatus =

@@ -1,4 +1,5 @@
 import { env } from "@/lib/env";
+import { centsToPaypalValue } from "@/lib/money";
 import { paypalFetch, usd } from "./client";
 
 /**
@@ -129,7 +130,7 @@ export async function sendPayoutBatch(orderId: string, items: PayoutItem[]): Pro
         // thing "currency_code". Using the Orders helper here cost us a live
         // payout: PayPal answered VALIDATION_ERROR, "items[0].amount.currency
         // may not be null". Two APIs, two spellings.
-        amount: { currency: "USD", value: (i.amountUsdCents / 100).toFixed(2) },
+        amount: { currency: "USD", value: centsToPaypalValue(i.amountUsdCents) },
         sender_item_id: i.payoutId,
         note: i.note,
       })),
@@ -139,32 +140,6 @@ export async function sendPayoutBatch(orderId: string, items: PayoutItem[]): Pro
   const batchId = res.batch_header?.payout_batch_id;
   if (!batchId) throw new Error("PayPal accepted the payout but returned no batch id");
   return { batchId };
-}
-
-/** BUILD_PLAN 11.5. Non-blocking: a failure here must not stop a listing going live. */
-export async function createCatalogProduct(a: {
-  listingId: string;
-  title: string;
-  description?: string | null;
-  imageUrl?: string | null;
-}): Promise<string | null> {
-  try {
-    const res = await paypalFetch<{ id?: string }>("/v1/catalogs/products", {
-      method: "POST",
-      requestId: `product-${a.listingId}`,
-      body: {
-        name: a.title.slice(0, 127),
-        description: a.description?.slice(0, 256) ?? undefined,
-        type: "PHYSICAL",
-        ...(a.imageUrl ? { image_url: a.imageUrl } : {}),
-        home_url: new URL(`/p/${a.listingId}`, env.APP_URL).toString(),
-      },
-    });
-    return res.id ?? null;
-  } catch (err) {
-    console.error("[thari] catalog product failed (non-blocking)", err);
-    return null;
-  }
 }
 
 /** BUILD_PLAN 11.9. Full refund of a capture. */

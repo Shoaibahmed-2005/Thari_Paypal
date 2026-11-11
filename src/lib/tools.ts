@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { env } from "@/lib/env";
+import { orderTotals } from "@/lib/money";
 import { createPayPalOrder } from "@/lib/paypal/orders";
 import { isPayPalConfigured } from "@/lib/paypal/client";
 
@@ -163,8 +164,7 @@ export async function createCheckout(
   if (listing.status !== "LIVE") return { ok: false, error: "That piece has already sold." };
   if (listing.priceUsdCents == null) return { ok: false, error: "That piece has no price yet." };
 
-  const itemUsdCents = listing.priceUsdCents;
-  const shippingUsdCents = Math.round(env.SHIPPING_USD * 100);
+  const totals = orderTotals(listing.priceUsdCents, env.SHIPPING_USD);
 
   const order = await db.order.create({
     data: {
@@ -173,9 +173,7 @@ export async function createCheckout(
       status: "CREATED",
       channel,
       paypalOrderId: `pending-${crypto.randomUUID()}`,
-      itemUsdCents,
-      shippingUsdCents,
-      totalUsdCents: itemUsdCents + shippingUsdCents,
+      ...totals,
     },
   });
 
@@ -188,8 +186,8 @@ export async function createCheckout(
       ourOrderId: order.id,
       listingId: listing.id,
       title: listing.title ?? "Handwoven piece",
-      itemUsdCents,
-      shippingUsdCents,
+      itemUsdCents: totals.itemUsdCents,
+      shippingUsdCents: totals.shippingUsdCents,
       imageUrl,
     })) as { id: string; links?: { rel: string; href: string }[] };
 
@@ -210,9 +208,9 @@ export async function createCheckout(
       ok: true,
       orderId: order.id,
       paypalOrderId: pp.id,
-      itemUsd: itemUsdCents / 100,
-      shippingUsd: shippingUsdCents / 100,
-      totalUsd: (itemUsdCents + shippingUsdCents) / 100,
+      itemUsd: totals.itemUsdCents / 100,
+      shippingUsd: totals.shippingUsdCents / 100,
+      totalUsd: totals.totalUsdCents / 100,
       approveUrl: approve,
       note: "Nothing has been paid. The buyer must approve this in PayPal themselves.",
     };

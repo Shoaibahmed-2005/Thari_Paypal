@@ -1,4 +1,5 @@
 import { env, requireEnv } from "@/lib/env";
+import { centsToPaypalValue } from "@/lib/money";
 
 /**
  * Every server-side PayPal call goes through here (BUILD_PLAN 11).
@@ -14,7 +15,7 @@ const BASE = {
 
 export { WEB_SDK_ORIGIN } from "./config";
 
-export function paypalBaseUrl(): string {
+function paypalBaseUrl(): string {
   return BASE[env.PAYPAL_ENV];
 }
 
@@ -57,7 +58,7 @@ export function isPayPalConfigured(): boolean {
 
 let cached: { token: string; expiresAt: number } | null = null;
 
-export async function getAccessToken(): Promise<string> {
+async function getAccessToken(): Promise<string> {
   if (cached && Date.now() < cached.expiresAt) return cached.token;
   if (!isPayPalConfigured()) throw new PayPalNotConfiguredError();
 
@@ -93,11 +94,6 @@ export async function getAccessToken(): Promise<string> {
   // Refresh 60 s early so a call never races the expiry.
   cached = { token: body.access_token, expiresAt: Date.now() + ((body.expires_in ?? 3600) - 60) * 1000 };
   return cached.token;
-}
-
-/** Only for tests and for forcing a fresh token after a credential change. */
-export function clearTokenCache(): void {
-  cached = null;
 }
 
 /* ---------- the request helper ---------- */
@@ -174,7 +170,7 @@ function safeJson(text: string): unknown {
   }
 }
 
-/** PayPal wants amounts as strings with exactly two decimals. */
+/** An Orders v2 money object. The formatting itself lives in money.ts, which is unit tested. */
 export function usd(cents: number): { currency_code: "USD"; value: string } {
-  return { currency_code: "USD", value: (cents / 100).toFixed(2) };
+  return { currency_code: "USD", value: centsToPaypalValue(cents) };
 }

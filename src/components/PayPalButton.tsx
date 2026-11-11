@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 /**
@@ -135,7 +135,7 @@ export function PayPalButton({ listingId, clientId, sdkOrigin, amount, disabled 
     };
   }, [clientId, sdkOrigin, amount, router]);
 
-  const pay = useCallback(() => {
+  function pay() {
     const session = sessionRef.current;
     if (!session) return;
     setMessage(null);
@@ -158,7 +158,7 @@ export function PayPalButton({ listingId, clientId, sdkOrigin, amount, disabled 
     void session.start({ presentationMode: "auto" }, order).catch(() => {
       /* onError and onCancel already report to the buyer */
     });
-  }, [listingId]);
+  }
 
   return (
     <div className="flex flex-col gap-2">

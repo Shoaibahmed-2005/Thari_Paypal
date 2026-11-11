@@ -6,8 +6,7 @@ import { Mic } from "lucide-react";
 import { WeaverBottomNav } from "@/components/Nav";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { NotificationCard } from "@/components/NotificationCard";
-import { PlaceholderImage, StatusChip, Wordmark } from "@/components/ui";
-import type { ChipStatus } from "@/components/ui";
+import { ListingChip, PlaceholderImage, Wordmark } from "@/components/ui";
 import { fill, weaverStrings } from "@/lib/i18n";
 import { fontStackFor } from "@/lib/languages";
 import { formatInr, usdCentsToInr } from "@/lib/money";
@@ -17,14 +16,6 @@ import { getWeaver, getWeaverMoney, getWeaverNotifications, getWeaverPieces } fr
 export const metadata: Metadata = { title: "Thari — weaver" };
 
 /** Listing status -> the chip the weaver sees. */
-const CHIP: Record<string, ChipStatus> = {
-  DRAFT: "listed",
-  NEEDS_ANSWERS: "payout-pending",
-  READY_TO_CONFIRM: "payout-pending",
-  LIVE: "listed",
-  SOLD: "sold",
-};
-
 async function WeaverHome() {
   const weaver = await getWeaver();
   if (!weaver) redirect("/demo");
@@ -102,7 +93,7 @@ async function WeaverHome() {
                   )}
                   <div className="t-caption truncate text-ink-muted">{p.title ?? "Draft"}</div>
                   <div className="mt-1">
-                    <StatusChip status={CHIP[p.status] ?? "listed"} />
+                    <ListingChip status={p.status} />
                   </div>
                 </div>
               </li>

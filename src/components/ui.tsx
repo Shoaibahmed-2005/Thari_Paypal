@@ -30,6 +30,36 @@ const CHIP: Record<ChipStatus, { label: string; icon: LucideIcon; mod: string }>
   refunded: { label: "Refunded", icon: RotateCcw, mod: "refund" },
   "payout-pending": { label: "Payout pending", icon: Clock, mod: "" },
 };
+/**
+ * Order and listing statuses as chips. These maps lived in four pages, which
+ * meant four chances to disagree about what "SOLD" looks like.
+ */
+const ORDER_CHIP: Record<string, ChipStatus> = {
+  CREATED: "payout-pending",
+  PAID: "paid",
+  SHIPPED: "shipped",
+  DELIVERED: "delivered",
+  REFUNDED: "refunded",
+  FAILED: "refunded",
+};
+
+const LISTING_CHIP: Record<string, ChipStatus> = {
+  DRAFT: "listed",
+  NEEDS_ANSWERS: "payout-pending",
+  READY_TO_CONFIRM: "payout-pending",
+  LIVE: "listed",
+  SOLD: "sold",
+  ARCHIVED: "listed",
+};
+
+export function OrderChip({ status }: { status: string }) {
+  return <StatusChip status={ORDER_CHIP[status] ?? "paid"} />;
+}
+
+export function ListingChip({ status }: { status: string }) {
+  return <StatusChip status={LISTING_CHIP[status] ?? "listed"} />;
+}
+
 export function StatusChip({ status }: { status: ChipStatus }) {
   const c = CHIP[status];
   const Icon = c.icon;

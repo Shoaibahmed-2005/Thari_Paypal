@@ -3,21 +3,11 @@ import { redirect } from "next/navigation";
 import { connection } from "next/server";
 import type { Metadata } from "next";
 import { BuyerBottomNav, TopNav } from "@/components/Nav";
-import { PlaceholderImage, StatusChip } from "@/components/ui";
-import type { ChipStatus } from "@/components/ui";
+import { OrderChip, PlaceholderImage } from "@/components/ui";
 import { formatUsd } from "@/lib/money";
 import { getCurrentUser } from "@/lib/session";
 
 export const metadata: Metadata = { title: "Your orders — Thari" };
-
-const CHIP: Record<string, ChipStatus> = {
-  CREATED: "payout-pending",
-  PAID: "paid",
-  SHIPPED: "shipped",
-  DELIVERED: "delivered",
-  REFUNDED: "refunded",
-  FAILED: "refunded",
-};
 
 export default async function OrdersPage() {
   await connection();
@@ -73,7 +63,7 @@ export default async function OrdersPage() {
                       <Link href={`/p/${o.listingId}`} className="t-label no-underline">
                         {o.listing.title ?? "Handwoven piece"}
                       </Link>
-                      <StatusChip status={CHIP[o.status] ?? "paid"} />
+                      <OrderChip status={o.status} />
                     </div>
                     <p className="th-listing__weaver m-0">
                       by {o.listing.weaver.name}, {o.listing.weaver.town ?? "Tamil Nadu"}

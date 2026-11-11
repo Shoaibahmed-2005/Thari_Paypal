@@ -5,18 +5,10 @@ import { connection } from "next/server";
 import type { Metadata } from "next";
 import { Check } from "lucide-react";
 import { BuyerBottomNav, TopNav } from "@/components/Nav";
-import { StatusChip } from "@/components/ui";
-import type { ChipStatus } from "@/components/ui";
+import { OrderChip } from "@/components/ui";
 import { formatUsd } from "@/lib/money";
 
 export const metadata: Metadata = { title: "Thank you — Thari" };
-
-const CHIP: Record<string, ChipStatus> = {
-  PAID: "paid",
-  SHIPPED: "shipped",
-  DELIVERED: "delivered",
-  REFUNDED: "refunded",
-};
 
 async function Confirmation({ orderId }: { orderId: string }) {
   await connection();
@@ -49,7 +41,7 @@ async function Confirmation({ orderId }: { orderId: string }) {
       <section className="th-card mx-auto max-w-[520px] p-5">
         <div className="th-row justify-between">
           <h2 className="t-title m-0">Your order</h2>
-          <StatusChip status={CHIP[order.status] ?? "paid"} />
+          <OrderChip status={order.status} />
         </div>
 
         <dl className="t-body mt-4 grid grid-cols-[auto_1fr] gap-x-4 gap-y-2">

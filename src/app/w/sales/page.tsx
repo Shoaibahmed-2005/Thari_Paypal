@@ -3,8 +3,7 @@ import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { ChevronLeft } from "lucide-react";
 import { WeaverBottomNav } from "@/components/Nav";
-import { PlaceholderImage, StatusChip } from "@/components/ui";
-import type { ChipStatus } from "@/components/ui";
+import { OrderChip, PlaceholderImage } from "@/components/ui";
 import { env } from "@/lib/env";
 import { weaverStrings } from "@/lib/i18n";
 import { fontStackFor } from "@/lib/languages";
@@ -12,13 +11,6 @@ import { formatInr, usdCentsToInr } from "@/lib/money";
 import { getWeaver } from "@/lib/weaver";
 
 export const metadata: Metadata = { title: "Thari — sales" };
-
-const CHIP: Record<string, ChipStatus> = {
-  PAID: "paid",
-  SHIPPED: "shipped",
-  DELIVERED: "delivered",
-  REFUNDED: "refunded",
-};
 
 export default async function WeaverSalesPage() {
   const weaver = await getWeaver();
@@ -77,7 +69,7 @@ export default async function WeaverSalesPage() {
                       )}
                       <div className="t-caption truncate text-ink-muted">{o.listing.title}</div>
                       <div className="th-row mt-1 justify-between">
-                        <StatusChip status={CHIP[o.status] ?? "paid"} />
+                        <OrderChip status={o.status} />
                         <span className="th-price">{formatInr(inr)}</span>
                       </div>
                       {mine && mine.status !== "SUCCEEDED" && (

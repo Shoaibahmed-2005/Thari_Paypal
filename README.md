@@ -12,9 +12,13 @@ Built for the [PayPal AI Hackathon 2026](https://paypalaihackathon.devpost.com/)
 
 ## The problem
 
-A Kanchipuram silk saree takes six weeks on a pit loom. A trader pays the weaver a fraction of what it sells for abroad, and buyers overseas have no way to tell real handloom from a mill-made copy. The weaver has a phone, but she doesn't type English, and marketplaces are built around typing English.
+Millions of people in rural India make things by hand and sell them through a trader who keeps most of the money. They are not short of skill. They are short of a way to reach a buyer directly, and of any way to prove to a stranger abroad that the thing was made by hand rather than by a machine.
 
-Thari removes both barriers: she speaks, and the piece carries proof it was made by hand.
+A third barrier sits underneath both: every marketplace expects you to type, in English. Many of them can't, so the tools that would help them are the tools they can't use.
+
+A Kanchipuram silk saree is the case we built. It takes six weeks on a pit loom. The trader pays a fraction of what it fetches abroad, and a buyer in Boston cannot tell it from a mill-made copy.
+
+Thari removes all three barriers: she speaks instead of typing, the piece carries proof it was made by hand, and the money reaches her directly.
 
 ## What it does
 

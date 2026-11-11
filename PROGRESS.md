@@ -66,7 +66,20 @@ A full buy ran end to end against the PayPal sandbox and every step was verified
 
 **An AI never pays.** `create_checkout` prepares an order and returns a link; a human approves it in PayPal. The tool says so in its own output rather than relying on the caller.
 
+### DEPLOYED (2026-11-11): https://thari-paypal.vercel.app
+- Vercel project connected to the GitHub repo; every env var set in Vercel (not committed), with `APP_URL=https://thari-paypal.vercel.app`. `.env.local` keeps `http://localhost:3000` for local work.
+- Blob store created (**Public** access, read-write token attached). `/api/uploads` puts weaver photos and loom clips there; with no token it answers 503 and the client falls back to a data URL for photos.
+- **M9 done:** webhook registered against the deployed URL, nine events, `PAYPAL_WEBHOOK_ID` set in Vercel. Verified in production that a forged `PAYMENT.CAPTURE.COMPLETED` is rejected with 400 "signature not verified" — without that check, anyone who guessed the URL could mark an order paid and trigger payouts.
+- Production smoke test passed: all pages 200, all three demo logins land on the right page, MCP returns all three tools, catalog serves 8 items each with images, and `/api/orders` creates a real PayPal order.
+- Shop is 8 pieces, every one with a real photograph and a description written from that photograph; 6 verified, 2 awaiting the co-op. Prices $45-$260.
+
 ### Exact next task
+1. **Run the full demo once against production** — weaver voice flow, co-op confirm, buyer purchase, payout, notification. Nothing has yet been bought end to end on the deployed site; every purchase so far was on localhost.
+2. **M10 video** (under 3 min, YouTube, public). Shot list in the chat history: problem -> weaver voice listing -> co-op confirms and the badge appears -> buyer pays -> payouts grid -> weaver hears it in Tamil.
+3. **M11 Devpost**: description, "Built with", hosted URL, repo URL, video URL, sandbox buyer login. Submit before **Nov 12, 12:00 PM Pacific = Nov 13, 1:30 AM IST**.
+4. Nice-to-have if time: weaver photo on `/weavers/[id]`, `/w/sales` and `/w/money`, native-speaker check of the Hindi/Telugu/Bengali strings.
+
+
 **Phase 5 — deploy, webhooks, polish.** This is now the critical path.
 1. **M6:** Vercel project + Blob store -> `BLOB_READ_WRITE_TOKEN`. Set every `.env.local` value as a Vercel environment variable, with `APP_URL` as the deployed URL.
 2. Deploy, then **M9:** create the webhook in the PayPal app pointing at `https://<url>/api/paypal/webhook`, paste `PAYPAL_WEBHOOK_ID`, redeploy. **`/api/paypal/webhook` is not built yet** (BUILD_PLAN 11.7) — build it with signature verification and `WebhookEvent` idempotency.

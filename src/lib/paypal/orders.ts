@@ -125,7 +125,11 @@ export async function sendPayoutBatch(orderId: string, items: PayoutItem[]): Pro
       items: items.map((i) => ({
         recipient_type: "EMAIL",
         receiver: i.receiverEmail,
-        amount: usd(i.amountUsdCents),
+        // Payouts v1 names this field "currency"; Orders v2 calls the same
+        // thing "currency_code". Using the Orders helper here cost us a live
+        // payout: PayPal answered VALIDATION_ERROR, "items[0].amount.currency
+        // may not be null". Two APIs, two spellings.
+        amount: { currency: "USD", value: (i.amountUsdCents / 100).toFixed(2) },
         sender_item_id: i.payoutId,
         note: i.note,
       })),

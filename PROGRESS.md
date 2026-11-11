@@ -39,6 +39,23 @@
 - **Deviation from 10.3:** the plan expected raw PCM needing a WAV header. Unary TTS responses already return `audio/wav` with a RIFF header, so the wrapper only runs if a response ever comes back headerless.
 - **Deviation:** TTS is called over REST, not through `@google/genai`. The installed SDK serialises `speechConfig` in a way the API rejects ("Unknown name speechConfig at generation_config") while the identical shape over REST returns 200. Text generation through the SDK is fine.
 
+### PHASE 3 PROVEN LIVE: a real sandbox purchase paid the weaver (2026-11-11)
+A full buy ran end to end against the PayPal sandbox and every step was verified at PayPal, not just in our database:
+- Order created ($225.00 = $205 item + $20 shipping), buyer approved, **capture 44968660CK8999534**, order PAID, listing SOLD.
+- Weaver notified in Tamil from the template: "உங்கள் ஆரஞ்சு பட்டுப் புடவை விற்பனையானது. ₹16,236 உங்களுக்கு வருகிறது."
+- **Split paid out: $184.50 to the weaver's sandbox account, $20.50 to the co-op's**, batch accepted by PayPal.
+- Test orders were deleted afterwards and the seed re-run, so the demo database is pristine: 8 live listings, 1 seeded order.
+
+**Four real bugs this shook out, none of which any amount of code review would have found:**
+1. **`cacheComponents` broke checkout silently.** Client components inside a nested async server component on `/p/[id]` never hydrated, so the Pay button could not be clicked. Proven by rendering the same button inside and outside: outer worked, inner did not, in dev and in a production build. The flag is off now (`next.config.ts`).
+2. **`/checkout/return` did not exist.** We pass it to PayPal as `return_url`. When the popup is a separate browser window PayPal redirects there instead of calling `onApprove` — a real approved payment landed on a 404 and was never captured. The route now exists and shares `captureAndFulfil` with the API route; both are idempotent.
+3. **Payouts v1 wants `amount.currency`, Orders v2 wants `amount.currency_code`.** Reusing the Orders helper made PayPal answer VALIDATION_ERROR, "may not be null". BUILD_PLAN 11.4 had it right and we didn't follow it.
+4. **The seed's fallback payout addresses reached PayPal.** The database had been seeded before `SANDBOX_*_EMAIL` existed, so payouts went to `weaver-sandbox@example.com` and came back UNCLAIMED / RECEIVER_UNREGISTERED. Re-seeding fixed it, and `retryPayouts` now re-reads the current address rather than trusting the one stored at failure time.
+
+**Also built:** `POST /api/payouts/[orderId]/retry` (co-op only) — the Retry button's endpoint from BUILD_PLAN 11.4, which Phase 4's dashboard will call. It lives under `/api/payouts` because Next forbids two different dynamic slug names at one path level.
+
+**Sandbox accounts must be United States.** Indian sandbox accounts were rejected at checkout with "this seller doesn't accept payments in your currency", exactly as BUILD_PLAN 11.4 warned. The app and all four accounts were recreated as US.
+
 ### Exact next task
 1. **Phase 2 leftovers, in priority order** (see the blocked list below): Blob upload (needs M6) to replace data-URL photos; a WAV encoder for live-mode recording; `/w/sales`, `/w/money`, `/weavers/[id]`.
 2. **Phase 3 — PayPal checkout, capture, split, notification** (BUILD_PLAN section 11, Phase 3 in section 15). Needs **M2 and M3**: the sandbox app credentials and the three sandbox account emails. Ask for these next.

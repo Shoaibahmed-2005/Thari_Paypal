@@ -1,12 +1,11 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { PayPalError, isPayPalConfigured } from "@/lib/paypal/client";
-import { fulfillOrderWithDb } from "@/lib/paypal/deps";
-import { capturePayPalOrder } from "@/lib/paypal/orders";
+import { captureAndFulfil } from "@/lib/paypal/capture";
+import { isPayPalConfigured } from "@/lib/paypal/client";
 
 /**
- * BUILD_PLAN 11.3. Idempotent at every level: an order already PAID returns
- * straight away, the capture call carries a request id derived from our order,
- * and fulfilment runs through the one function that can only act once.
+ * BUILD_PLAN 11.3, called by the SDK's onApprove. The logic lives in
+ * captureAndFulfil, shared with /checkout/return so both ways an approval can
+ * reach us behave identically and are safe to run twice.
  */
 export async function POST(_req: NextRequest, { params }: RouteContext<"/api/orders/[paypalOrderId]/capture">) {
   if (!isPayPalConfigured()) {
@@ -14,63 +13,23 @@ export async function POST(_req: NextRequest, { params }: RouteContext<"/api/ord
   }
 
   const { paypalOrderId } = await params;
-  const { getDb } = await import("@/lib/db");
-  const db = getDb();
+  const result = await captureAndFulfil(paypalOrderId);
 
-  const order = await db.order.findUnique({
-    where: { paypalOrderId },
-    include: { listing: true },
-  });
-  if (!order) return NextResponse.json({ error: "Not found" }, { status: 404 });
-
-  // Already captured: say so rather than calling PayPal again.
-  if (order.status === "PAID" || order.fulfilledAt) {
-    return NextResponse.json({ orderId: order.id, alreadyPaid: true });
+  switch (result.kind) {
+    case "ok":
+      return NextResponse.json({ orderId: result.orderId });
+    case "already-paid":
+      return NextResponse.json({ orderId: result.orderId, alreadyPaid: true });
+    case "pending":
+      return NextResponse.json({ orderId: result.orderId, pending: true });
+    case "sold-elsewhere":
+      return NextResponse.json({ error: "This piece was just sold to someone else." }, { status: 409 });
+    case "not-found":
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    case "failed":
+      return NextResponse.json(
+        { error: result.message, payPalName: result.payPalName, debugId: result.debugId },
+        { status: 502 },
+      );
   }
-
-  // Someone else bought it in the meantime. Don't take the money; the
-  // uncaptured PayPal order simply expires.
-  if (order.listing.status !== "LIVE") {
-    await db.order.update({ where: { id: order.id }, data: { status: "FAILED" } });
-    return NextResponse.json({ error: "This piece was just sold to someone else." }, { status: 409 });
-  }
-
-  let capture;
-  try {
-    capture = await capturePayPalOrder(paypalOrderId, order.id);
-  } catch (err) {
-    const e = err as PayPalError;
-    console.error("[thari] capture failed", { debugId: e?.debugId, name: e?.payPalName });
-    await db.order.update({ where: { id: order.id }, data: { status: "FAILED" } });
-    return NextResponse.json(
-      { error: "The payment could not be completed.", payPalName: e?.payPalName, debugId: e?.debugId },
-      { status: 502 },
-    );
-  }
-
-  await db.order.update({
-    where: { id: order.id },
-    data: {
-      captureId: capture.captureId,
-      payerEmail: capture.payerEmail,
-      shippingAddress: (capture.shippingAddress ?? undefined) as object | undefined,
-    },
-  });
-
-  // A PENDING capture is not money yet: wait for PAYMENT.CAPTURE.COMPLETED
-  // rather than paying the weaver out of a payment that may still fail (11.3).
-  if (capture.captureStatus !== "COMPLETED") {
-    await db.agentLog.create({
-      data: {
-        actor: "system",
-        action: "capture.pending",
-        orderId: order.id,
-        detail: { captureStatus: capture.captureStatus, orderStatus: capture.orderStatus },
-      },
-    });
-    return NextResponse.json({ orderId: order.id, pending: true });
-  }
-
-  const result = await fulfillOrderWithDb(order.id);
-  return NextResponse.json({ orderId: order.id, fulfilled: result });
 }

@@ -120,8 +120,12 @@ async function main() {
       giTag: l.giTag ?? null,
       priceInr: l.priceInr,
       priceUsdCents: inrToUsdCents(l.priceInr, FX),
-      // Real loom clip (M7) in /public/media; verified = clip + co-op confirmation.
-      loomClipUrl: l.verified ? LOOM_CLIP : null,
+      // Every piece has a loom clip: the weaver films it when she lists. What
+      // "verified" means is that the CO-OP has confirmed it, which is a
+      // separate act. Giving clips only to confirmed pieces made the co-op's
+      // Confirm button impossible to demonstrate, because the two unconfirmed
+      // pieces had nothing to vouch for.
+      loomClipUrl: LOOM_CLIP,
       coopConfirmedAt: l.verified ? confirmedAt : null,
       createdAt,
     } as const;

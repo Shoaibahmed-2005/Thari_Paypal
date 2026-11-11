@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { Check, Globe } from "lucide-react";
 import { LANGUAGES, fontStackFor } from "@/lib/languages";
 
@@ -13,9 +12,8 @@ import { LANGUAGES, fontStackFor } from "@/lib/languages";
  * point of the control.
  */
 export function LanguageSwitcher({ current }: { current: string }) {
-  const router = useRouter();
   const [open, setOpen] = useState(false);
-  const [pending, startTransition] = useTransition();
+  const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const active = LANGUAGES.find((l) => l.code === current) ?? LANGUAGES[0];
@@ -23,6 +21,7 @@ export function LanguageSwitcher({ current }: { current: string }) {
   async function choose(code: string) {
     if (code === current) return setOpen(false);
     setError(null);
+    setPending(true);
     try {
       const res = await fetch("/api/settings/language", {
         method: "POST",
@@ -30,9 +29,13 @@ export function LanguageSwitcher({ current }: { current: string }) {
         body: JSON.stringify({ lang: code }),
       });
       if (!res.ok) throw new Error((await res.json()).error ?? "Could not change the language.");
-      setOpen(false);
-      startTransition(() => router.refresh());
+      // A full reload rather than router.refresh(): every string on the page
+      // comes from the server in her language, and refresh() was leaving the
+      // page in the old one. Reloading is honest about what is happening and
+      // always works.
+      window.location.reload();
     } catch (err) {
+      setPending(false);
       setError(err instanceof Error ? err.message : "Could not change the language.");
     }
   }

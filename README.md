@@ -21,6 +21,36 @@ npm test
 
 MIT, see `LICENSE`.
 
+## Use Thari from Claude (MCP)
+
+Thari exposes its shop over the Model Context Protocol, so an AI agent can
+browse it and get a payment ready — but never pay. Add it as a custom
+connector:
+
+```
+https://<your-deployment>/api/mcp
+```
+
+Three tools:
+
+| Tool | What it does |
+|---|---|
+| `search_listings` | up to 6 live pieces, with the weaver's name and whether the co-op verified it |
+| `get_listing` | full details of one piece, including the evidence behind its Verified handwoven badge |
+| `create_checkout` | prepares a PayPal order and returns an `approveUrl`. **It does not pay.** |
+
+Try: *"Find me a verified handwoven silk saree under $250 and get it ready for
+checkout."*
+
+`create_checkout` returns `paid: false` and a link the buyer opens themselves.
+An agent can shop; only a human moves money. That boundary is deliberate, and
+the tool says so in its own output rather than trusting the caller to be
+careful.
+
+There is also a plain machine-readable catalog at `/api/catalog.json`
+(schema.org-shaped, 60s cache) and JSON-LD `Product` data on every product
+page, so agents that don't speak MCP can still read the shop.
+
 ## Credits and media
 
 - **Saree photographs and the loom clip** in `public/media` were supplied by the project owner.

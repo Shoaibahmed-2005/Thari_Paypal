@@ -56,7 +56,25 @@ A full buy ran end to end against the PayPal sandbox and every step was verified
 
 **Sandbox accounts must be United States.** Indian sandbox accounts were rejected at checkout with "this seller doesn't accept payments in your currency", exactly as BUILD_PLAN 11.4 warned. The app and all four accounts were recreated as US.
 
+### PHASE 4 COMPLETE (2026-11-11): co-op dashboard + agentic commerce
+**Co-op dashboard `/coop`** (co-op only; a weaver is redirected). Overview tiles, three AG Grid 36 tables (listings, orders, payouts) with sorting, filtering, per-grid quick search and CSV export, themed from the brand tokens. Confirm/undo a piece, play its loom clip in a side panel, refund an order, retry a failed payout, and a readable activity feed built from AgentLog. **Confirming is what turns the Verified badge on** and is refused for anyone but the co-op (403) and for pieces with no loom clip.
+
+**Agentic commerce**, all three tools defined once in `src/lib/tools.ts` and shared:
+- **`/assistant`** — Gemini function calling, verified live: "Find a verified silk saree under 250 dollars" returned the two real verified silk pieces under $250, named their weavers, and rendered them as cards. Falls back to a real database search in `AI_MODE=mock`.
+- **`/api/mcp`** — MCP Streamable HTTP via `mcp-handler` + SDK 1.32 (`registerTool`, not the deprecated `.tool()`). Verified with raw JSON-RPC: `tools/list` returns all three; `search_listings` with `{fabric:"silk", maxPriceUsd:250, verifiedOnly:true}` returned the right two; **`create_checkout` prepared a real $180 PayPal order and returned an approveUrl with `paid: false`.**
+- **`/api/catalog.json`** — 8 items, schema.org-shaped, 60s cache, each carrying `verifiedHandwoven` and the evidence sentence behind it.
+
+**An AI never pays.** `create_checkout` prepares an order and returns a link; a human approves it in PayPal. The tool says so in its own output rather than relying on the caller.
+
 ### Exact next task
+**Phase 5 — deploy, webhooks, polish.** This is now the critical path.
+1. **M6:** Vercel project + Blob store -> `BLOB_READ_WRITE_TOKEN`. Set every `.env.local` value as a Vercel environment variable, with `APP_URL` as the deployed URL.
+2. Deploy, then **M9:** create the webhook in the PayPal app pointing at `https://<url>/api/paypal/webhook`, paste `PAYPAL_WEBHOOK_ID`, redeploy. **`/api/paypal/webhook` is not built yet** (BUILD_PLAN 11.7) — build it with signature verification and `WebhookEvent` idempotency.
+3. Swap `/w/new` photo data-URLs for Vercel Blob uploads.
+4. Re-run the full demo against the deployed URL before filming.
+5. **M10** video, **M11** Devpost submission.
+
+
 1. **Phase 2 leftovers, in priority order** (see the blocked list below): Blob upload (needs M6) to replace data-URL photos; a WAV encoder for live-mode recording; `/w/sales`, `/w/money`, `/weavers/[id]`.
 2. **Phase 3 — PayPal checkout, capture, split, notification** (BUILD_PLAN section 11, Phase 3 in section 15). Needs **M2 and M3**: the sandbox app credentials and the three sandbox account emails. Ask for these next.
 3. Phase 4 adds `/coop` (AG Grid), which is also what sets `coopConfirmedAt` and turns the Verified badge on for newly created listings, plus refunds.

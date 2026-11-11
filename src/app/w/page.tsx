@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { Mic } from "lucide-react";
 import { WeaverBottomNav } from "@/components/Nav";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { NotificationCard } from "@/components/NotificationCard";
 import { PlaceholderImage, StatusChip, Wordmark } from "@/components/ui";
 import type { ChipStatus } from "@/components/ui";
@@ -42,13 +43,18 @@ async function WeaverHome() {
 
   return (
     <>
+      {/* The wordmark stays தறி in every language: it is a mark, not a word
+          to translate. Only the interface follows her. */}
       <header className="th-row justify-between">
         <Link href="/w" aria-label="Thari">
           <Wordmark />
         </Link>
-        <Link href="/api/logout" className="t-caption text-ink-muted">
-          {language.nativeName}
-        </Link>
+        <div className="th-row">
+          <LanguageSwitcher current={language.code} />
+          <Link href="/api/logout" className="t-caption text-ink-muted">
+            Sign out
+          </Link>
+        </div>
       </header>
 
       <h1 className="t-title-lg mt-4" style={{ fontFamily: nativeFont }} lang={language.code}>

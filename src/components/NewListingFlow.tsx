@@ -80,6 +80,7 @@ export function NewListingFlow({
   const [usedSample, setUsedSample] = useState(false);
   const [photos, setPhotos] = useState<{ url: string; mimeType: string; data: string }[]>([]);
   const [clipUrl, setClipUrl] = useState<string | null>(null);
+  const [previewClip, setPreviewClip] = useState<string | null>(null);
   const [draft, setDraft] = useState<Draft | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [answerAudio, setAnswerAudio] = useState<Recording | null>(null);
@@ -309,20 +310,33 @@ export function NewListingFlow({
               accept="video/*"
               capture
               hidden
-              onChange={(e) => {
+              onChange={async (e) => {
                 const f = e.target.files?.[0];
                 if (!f) return;
                 if (f.size > 30 * 1024 * 1024) {
                   setError("That clip is larger than 30 MB. A shorter one works better.");
                   return;
                 }
-                setClipUrl(URL.createObjectURL(f));
+                setPreviewClip(URL.createObjectURL(f));
+                setBusy(true);
+                setError(null);
+                try {
+                  // A blob: URL only exists in this tab, so the clip has to be
+                  // uploaded or the listing would point at nothing.
+                  const url = await uploadToBlob(f, f.name || "loom.mp4");
+                  if (!url) setError("Loom clips need file storage, which isn't set up here. Skip for now.");
+                  else setClipUrl(url);
+                } catch (err) {
+                  setError(err instanceof Error ? err.message : t.somethingWrong);
+                } finally {
+                  setBusy(false);
+                }
               }}
             />
           </label>
-          {clipUrl && (
+          {previewClip && (
              
-            <video src={clipUrl} controls playsInline className="w-full" style={{ borderRadius: "var(--radius-md)" }} />
+            <video src={previewClip} controls playsInline className="w-full" style={{ borderRadius: "var(--radius-md)" }} />
           )}
           <button type="button" className="th-btn th-btn--primary th-btn--block" onClick={createDraft}>
             {t.next}
@@ -481,6 +495,20 @@ export function NewListingFlow({
   );
 }
 
+/**
+ * Upload to Vercel Blob and keep only the URL. Returns null when Blob isn't
+ * configured (local development), so the caller can fall back.
+ */
+async function uploadToBlob(file: Blob, filename: string): Promise<string | null> {
+  const form = new FormData();
+  form.append("file", new File([file], filename, { type: file.type }));
+  const res = await fetch("/api/uploads", { method: "POST", body: form });
+  if (res.status === 503) return null; // no Blob store here
+  const body = await res.json();
+  if (!res.ok) throw new Error(body.error ?? "The upload failed.");
+  return body.url as string;
+}
+
 /** Client-side resize to max 1600px JPEG before upload (9.3 step 2). */
 async function resizeToJpeg(file: File): Promise<{ url: string; mimeType: string; data: string }> {
   const bitmap = await createImageBitmap(file);
@@ -489,6 +517,16 @@ async function resizeToJpeg(file: File): Promise<{ url: string; mimeType: string
   canvas.width = Math.round(bitmap.width * scale);
   canvas.height = Math.round(bitmap.height * scale);
   canvas.getContext("2d")?.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-  const url = canvas.toDataURL("image/jpeg", 0.82);
-  return { url, mimeType: "image/jpeg", data: url.split(",")[1] ?? "" };
+  const dataUrl = canvas.toDataURL("image/jpeg", 0.82);
+  const data = dataUrl.split(",")[1] ?? "";
+
+  // The AI still gets the bytes inline; only the stored URL changes.
+  let url = dataUrl;
+  try {
+    const blob = await new Promise<Blob | null>((r) => canvas.toBlob(r, "image/jpeg", 0.82));
+    if (blob) url = (await uploadToBlob(blob, "photo.jpg")) ?? dataUrl;
+  } catch {
+    // Keep the data URL: a failed upload must not lose her photo.
+  }
+  return { url, mimeType: "image/jpeg", data };
 }

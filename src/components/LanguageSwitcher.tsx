@@ -28,6 +28,13 @@ export function LanguageSwitcher({ current }: { current: string }) {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ lang: code }),
       });
+      // A lapsed session is the likeliest failure here, and the one the user
+      // can do something about. Reloading sends her to sign in again rather
+      // than leaving her clicking a control that silently does nothing.
+      if (res.status === 401) {
+        window.location.reload();
+        return;
+      }
       if (!res.ok) throw new Error((await res.json()).error ?? "Could not change the language.");
       // A full reload rather than router.refresh(): every string on the page
       // comes from the server in her language, and refresh() was leaving the
@@ -68,6 +75,7 @@ export function LanguageSwitcher({ current }: { current: string }) {
               <button
                 type="button"
                 role="option"
+                disabled={pending}
                 aria-selected={l.code === current}
                 className="th-row w-full justify-between px-3 py-2 text-left"
                 style={{ border: 0, background: "transparent", cursor: "pointer", borderRadius: "var(--radius-sm)" }}
@@ -83,7 +91,11 @@ export function LanguageSwitcher({ current }: { current: string }) {
         </ul>
       )}
 
-      {error && <p className="t-caption absolute right-0 mt-1 text-ink-muted">{error}</p>}
+      {error && (
+        <p className="th-card t-caption absolute right-0 z-40 mt-2 whitespace-nowrap px-3 py-2" role="alert">
+          {error}
+        </p>
+      )}
     </div>
   );
 }

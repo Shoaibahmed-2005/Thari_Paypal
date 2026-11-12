@@ -13,6 +13,36 @@ export async function getWeaver() {
   });
 }
 
+/**
+ * Why a weaver-only request could not proceed.
+ *
+ * Collapsing all three into "sign in first" produced a baffling bug: the
+ * language switcher bounced the weaver to the sign-in page with no
+ * explanation, and a database hiccup looked identical to a lapsed cookie.
+ */
+export type WeaverAuth =
+  | { ok: true; weaver: NonNullable<Awaited<ReturnType<typeof getWeaver>>> }
+  | { ok: false; reason: "no-session" | "wrong-role" | "lookup-failed" };
+
+export async function requireWeaver(): Promise<WeaverAuth> {
+  const session = await getCurrentUser();
+  if (!session) return { ok: false, reason: "no-session" };
+  if (session.role !== "WEAVER") return { ok: false, reason: "wrong-role" };
+
+  try {
+    const { getDb } = await import("@/lib/db");
+    const weaver = await getDb().user.findFirst({
+      where: { id: session.userId, role: "WEAVER" },
+      include: { coop: true },
+    });
+    if (!weaver) return { ok: false, reason: "lookup-failed" };
+    return { ok: true, weaver };
+  } catch (err) {
+    console.error("[thari] weaver lookup failed", err);
+    return { ok: false, reason: "lookup-failed" };
+  }
+}
+
 export type Weaver = NonNullable<Awaited<ReturnType<typeof getWeaver>>>;
 
 export function weaverContext(w: Weaver): WeaverContext {

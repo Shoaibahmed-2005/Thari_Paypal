@@ -8,6 +8,8 @@ Built for the [PayPal AI Hackathon 2026](https://paypalaihackathon.devpost.com/)
 
 🔗 **Live:** https://thari-paypal.vercel.app — start at [`/demo`](https://thari-paypal.vercel.app/demo) and pick a role. No sign-up.
 
+▶️ **Demo video (2:32):** https://youtu.be/Oq9Excg4lOs
+
 ---
 
 ## The problem

@@ -327,9 +327,11 @@ export function CoopDashboard({ data, coopName }: { data: CoopData; coopName: st
           <h1 className="t-title-lg m-0">{coopName}</h1>
           <p className="t-caption m-0 text-ink-muted">Co-op dashboard</p>
         </div>
-        <a href="/api/logout" className="th-btn th-btn--ghost">
-          Sign out
-        </a>
+        <form action="/api/logout" method="post" className="contents">
+          <button type="submit" className="th-btn th-btn--ghost">
+            Sign out
+          </button>
+        </form>
       </header>
 
       <div className="mt-5 grid gap-4 md:grid-cols-4">

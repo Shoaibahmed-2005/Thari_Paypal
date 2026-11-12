@@ -12,6 +12,7 @@ import { formatInr, usdCentsToInr } from "@/lib/money";
 import { env } from "@/lib/env";
 import { requireWeaver, getWeaverMoney, getWeaverNotifications, getWeaverPieces } from "@/lib/weaver";
 import { SignedOut } from "@/components/SignedOut";
+import { SignOutButton } from "@/components/SignOutButton";
 
 /**
  * Every render of this page must see the real request.
@@ -55,9 +56,7 @@ async function WeaverHome() {
         </Link>
         <div className="th-row">
           <LanguageSwitcher current={language.code} />
-          <Link href="/api/logout" className="t-caption text-ink-muted">
-            Sign out
-          </Link>
+          <SignOutButton />
         </div>
       </header>
 
@@ -67,9 +66,9 @@ async function WeaverHome() {
 
       {unheard && <NotificationCard notification={{ id: unheard.id, textNative: unheard.textNative, textEn: unheard.textEn, audioUrl: unheard.audioUrl }} playLabel={t.play} lang={language.code} nativeFont={nativeFont} />}
 
-      {/* A plain <a> for the same reason as the bottom nav: see Nav.tsx. */}
-      <a
+      <Link
         href="/w/new"
+        prefetch={false}
         className="mt-5 flex items-center justify-center gap-3 bg-coral px-5 py-6 text-on-coral no-underline"
         style={{ borderRadius: "var(--radius-xl)", boxShadow: "var(--shadow-float)" }}
       >
@@ -77,7 +76,7 @@ async function WeaverHome() {
         <span className="t-title m-0" style={{ fontFamily: nativeFont }} lang={language.code}>
           {t.sellNew}
         </span>
-      </a>
+      </Link>
 
       <section className="mt-6">
         <h2 className="t-title" style={{ fontFamily: nativeFont }} lang={language.code}>

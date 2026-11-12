@@ -37,9 +37,11 @@ export function SignedOut({
         <p className="t-body mt-2 text-ink-muted">
           Your demo session ended. Nothing you listed has been lost.
         </p>
-        <Link href={`/api/demo-login?role=${role}`} className="th-btn th-btn--primary mt-4 w-full">
+        {/* A plain <a>: /api/demo-login signs you in, and a prefetched link
+            would do that on its own, without anyone clicking it. */}
+        <a href={`/api/demo-login?role=${role}`} className="th-btn th-btn--primary mt-4 w-full">
           Sign back in
-        </Link>
+        </a>
         <Link href="/demo" className="th-btn th-btn--ghost mt-2 w-full">
           Pick a different role
         </Link>

@@ -5,6 +5,7 @@ import { Code, Info, Landmark, ShoppingBag, Spool } from "lucide-react";
 import { Wordmark } from "@/components/ui";
 import { env } from "@/lib/env";
 import { getCurrentUser } from "@/lib/session";
+import { SignOutButton } from "@/components/SignOutButton";
 
 export const metadata: Metadata = {
   title: "Try Thari in 3 roles — Thari",
@@ -51,9 +52,7 @@ async function SignedInNotice() {
   return (
     <p className="t-caption m-0">
       Signed in as {user.name}.{" "}
-      <Link href="/api/logout" className="underline">
-        Sign out
-      </Link>
+      <SignOutButton className="underline" />
     </p>
   );
 }

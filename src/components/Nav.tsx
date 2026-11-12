@@ -33,26 +33,34 @@ interface NavItem {
 }
 
 /**
- * `prefetch={false}` on every tab is deliberate. These routes are behind a
- * session, so prefetching them makes Next render them speculatively, and a
- * prefetch that lands before the sign-in cookie does produces a payload the
- * router may later act on. See `SignedOut` for the bug that caused.
+ * These tabs are plain `<a>` elements, not `<Link>`, on purpose.
+ *
+ * Every page behind this nav is session-gated, and client-side navigation
+ * repeatedly reached them with no cookie: the weaver was told to sign in
+ * again moments after signing in. The same URL loaded as a document, or
+ * fetched by hand with credentials, was signed in every single time -- the
+ * failure only ever appeared in the router's own request, and only on a real
+ * deployment, which is what made it so hard to pin down.
+ *
+ * A plain link is a document navigation, which always carries her cookie.
+ * The cost is the page is served fresh instead of patched in; these pages are
+ * server-rendered anyway, so on a phone the difference is slight, and it buys
+ * a nav that cannot sign her out by accident.
  */
 function BottomNav({ items, center, current }: { items: NavItem[]; center: NavItem; current?: string }) {
   const [a, b, c, d] = items;
   const item = (i: NavItem) => {
     const Icon = i.icon;
     return (
-      <Link
+      <a
         key={i.href}
         href={i.href}
-        prefetch={false}
         className="th-nav__item"
         aria-current={current === i.href ? "page" : undefined}
       >
         <Icon strokeWidth={1.75} aria-hidden />
         {i.label}
-      </Link>
+      </a>
     );
   };
   const CenterIcon = center.icon;
@@ -61,9 +69,9 @@ function BottomNav({ items, center, current }: { items: NavItem[]; center: NavIt
       <div className="th-nav">
         {item(a)}
         {item(b)}
-        <Link href={center.href} prefetch={false} className="th-nav__center" aria-label={center.label}>
+        <a href={center.href} className="th-nav__center" aria-label={center.label}>
           <CenterIcon strokeWidth={1.75} aria-hidden />
-        </Link>
+        </a>
         {item(c)}
         {item(d)}
       </div>

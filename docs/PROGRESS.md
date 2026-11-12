@@ -180,3 +180,46 @@ Needs Node 22+.
 - **Next 16 scaffold defaults kept:** `cacheComponents` and `partialPrefetching` in `next.config.ts`; `turbopack.root` set because of a stray lockfile in the user's home folder. If dynamic pages complain about caching, read `node_modules/next/dist/docs/` first.
 - `AGENTS.md` has a block appended by `next dev`; it's committed so the tree stays clean.
 - Not yet installed (later phases): ag-grid-react/community, mcp-handler, extendable-media-recorder(+wav-encoder).
+
+### 2026-11-12 — the weaver kept being signed out on Vercel (fixed)
+
+**Symptom.** On the deployed app, a weaver signed in and was then thrown back
+to `/demo` — on landing, when tapping "sell a new piece", or when switching
+language (which 401'd). It never reproduced on localhost, and `curl` against
+production was clean every time, so it looked intermittent and unexplainable.
+
+**Cause.** "Sign out" was a `<Link href="/api/logout">`, and `/api/logout`
+answered GET. Next prefetches `<Link>` targets, and prefetching a GET route
+handler *runs* it — so her session was destroyed by a sign-out nobody clicked.
+Prefetching is off in development, which is exactly why it only ever happened
+once deployed, and it looked random because it depended on when the link came
+into view.
+
+**Fix.** `/api/logout` is POST only and the sign-out controls are forms, so
+there is nothing to prefetch and a GET no longer changes anything. "Sign back
+in" and the `/demo` role buttons are plain `<a>` for the same reason —
+`/api/demo-login` signs you in, and a prefetched link would have done that
+unbidden too.
+
+**Kept from the hunt**, because each stands on its own:
+- Session-gated pages render a "please sign in again" panel instead of
+  `redirect("/demo")`. A redirect inside a prefetchable route can be cached by
+  the router and carried out later as a real navigation; a rendered page
+  cannot bounce anyone, and it tells her what happened.
+- That panel records *why* in `data-signed-out-reason` (`no-cookie`,
+  `no-session`, `wrong-role`, `lookup-failed`). Being unable to tell
+  "the cookie never arrived" from "it arrived and said nothing" is what made
+  this take as long as it did.
+- `getCurrentUser` no longer opens with `await connection()`. It existed for
+  Cache Components, which is disabled, and it was the one call there that
+  could raise a framework signal for the catch to swallow into "signed out".
+- `force-dynamic` on `/w`, `/w/new`, `/w/sales`, `/w/money`, `/coop`,
+  `/orders`, so no cookie-less version of a session-gated page can exist.
+- `prefetch={false}` on the weaver nav: these pages are session-gated and a
+  payload rendered while signed out is not something the router should hold.
+
+**Verified on production:** 48 authenticated page loads across the journey
+with no failures; the full click-through (`/demo` → sign in → `/w` → money →
+sales → home → sell a new piece) signed in at every step; language switch to
+Hindi and back to Tamil; co-op and buyer roles unaffected. `GET /api/logout`
+is now 405. The demo weaver is left in Tamil.

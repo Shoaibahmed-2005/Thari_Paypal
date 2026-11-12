@@ -1,5 +1,4 @@
 import { cookies } from "next/headers";
-import { connection } from "next/server";
 import { unstable_rethrow } from "next/navigation";
 import { getIronSession, type IronSession, type SessionOptions } from "iron-session";
 import { env } from "@/lib/env";
@@ -56,22 +55,33 @@ export async function getSession(): Promise<IronSession<SessionData>> {
 /**
  * Who is signed in, or null. Never throws.
  *
- * `connection()` first: iron-session calls `Date.now()` while unsealing the
- * cookie, which Cache Components flags as unstable during prerendering. This
- * marks the read as request-time data, which is what it is.
+ * There used to be an `await connection()` here, added so Cache Components
+ * would not flag the `Date.now()` iron-session calls while unsealing. Cache
+ * Components is off (see `next.config.ts`), so it bought nothing — and it
+ * cost a great deal: it was the one call here that could raise a framework
+ * signal, the catch below turned that into `null`, and a weaver mid-listing
+ * was told she had been signed out. It only ever fired on real deployments,
+ * which is why it survived so long.
+ *
+ * The cookie is now checked before unsealing, so the ordinary signed-out case
+ * is a plain absence rather than something inferred from a thrown error, and
+ * anything that does throw is logged with enough context to recognise it.
  */
 export async function getCurrentUser(): Promise<Required<SessionData> | null> {
+  let cookiePresent = false;
   try {
-    await connection();
+    const jar = await cookies();
+    cookiePresent = jar.has("thari_session");
+    if (!cookiePresent) return null;
+
     const s = await getSession();
     if (!s.userId || !s.role) return null;
     return { userId: s.userId, role: s.role, name: s.name ?? "" };
   } catch (err) {
-    // Next's own control-flow errors (redirect, notFound, the prerender
-    // bailout when `cookies()` is read outside a Suspense boundary) must
-    // travel up; only a genuinely unreadable cookie means "signed out".
+    // Next's own control-flow errors (redirect, notFound, a prerender
+    // bailout) must travel up; only an unreadable cookie means "signed out".
     unstable_rethrow(err);
-    console.error("[thari] reading session failed", err);
+    console.error(`[thari] reading session failed (cookie present: ${cookiePresent})`, err);
     return null;
   }
 }

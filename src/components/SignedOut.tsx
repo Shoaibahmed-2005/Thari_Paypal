@@ -17,7 +17,9 @@ import Link from "next/link";
  */
 export function SignedOut({ role = "weaver" }: { role?: "weaver" | "buyer" | "coop" }) {
   return (
-    <main className="mx-auto flex min-h-dvh max-w-[420px] flex-col justify-center px-4">
+    // A plain div, not a <main>: some of these pages render it inside their
+    // own <main>, and nesting the width and padding clipped the card.
+    <div className="mx-auto flex w-full max-w-[420px] flex-col justify-center py-16">
       <div className="th-card p-5">
         <h1 className="t-title-lg m-0">Please sign in again</h1>
         <p className="t-body mt-2 text-ink-muted">
@@ -30,6 +32,6 @@ export function SignedOut({ role = "weaver" }: { role?: "weaver" | "buyer" | "co
           Pick a different role
         </Link>
       </div>
-    </main>
+    </div>
   );
 }

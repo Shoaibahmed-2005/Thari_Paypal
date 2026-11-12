@@ -22,11 +22,18 @@ export async function getWeaver() {
  */
 export type WeaverAuth =
   | { ok: true; weaver: NonNullable<Awaited<ReturnType<typeof getWeaver>>> }
-  | { ok: false; reason: "no-session" | "wrong-role" | "lookup-failed" };
+  | { ok: false; reason: "no-cookie" | "no-session" | "wrong-role" | "lookup-failed" };
 
 export async function requireWeaver(): Promise<WeaverAuth> {
   const session = await getCurrentUser();
-  if (!session) return { ok: false, reason: "no-session" };
+  if (!session) {
+    // Tell "the cookie never arrived" apart from "it arrived and said
+    // nothing useful". The two look identical on screen and have entirely
+    // different causes, and guessing between them cost a long hunt once.
+    const { cookies } = await import("next/headers");
+    const jar = await cookies();
+    return { ok: false, reason: jar.has("thari_session") ? "no-session" : "no-cookie" };
+  }
   if (session.role !== "WEAVER") return { ok: false, reason: "wrong-role" };
 
   try {

@@ -15,11 +15,23 @@ import Link from "next/link";
  * prefetch can now only produce this panel, never a navigation. It also tells
  * her what happened, which a silent bounce never did.
  */
-export function SignedOut({ role = "weaver" }: { role?: "weaver" | "buyer" | "coop" }) {
+export function SignedOut({
+  role = "weaver",
+  reason,
+}: {
+  role?: "weaver" | "buyer" | "coop";
+  /**
+   * Why this panel is showing, written into the markup rather than shown.
+   * "no-cookie" and "no-session" look the same to her but mean different
+   * things to us, and without it the only way to tell them apart is to
+   * guess.
+   */
+  reason?: string;
+}) {
   return (
     // A plain div, not a <main>: some of these pages render it inside their
     // own <main>, and nesting the width and padding clipped the card.
-    <div className="mx-auto flex w-full max-w-[420px] flex-col justify-center py-16">
+    <div data-signed-out-reason={reason} className="mx-auto flex w-full max-w-[420px] flex-col justify-center py-16">
       <div className="th-card p-5">
         <h1 className="t-title-lg m-0">Please sign in again</h1>
         <p className="t-body mt-2 text-ink-muted">

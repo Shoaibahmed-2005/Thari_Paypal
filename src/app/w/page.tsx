@@ -10,15 +10,16 @@ import { fill, weaverStrings } from "@/lib/i18n";
 import { fontStackFor } from "@/lib/languages";
 import { formatInr, usdCentsToInr } from "@/lib/money";
 import { env } from "@/lib/env";
-import { getWeaver, getWeaverMoney, getWeaverNotifications, getWeaverPieces } from "@/lib/weaver";
+import { requireWeaver, getWeaverMoney, getWeaverNotifications, getWeaverPieces } from "@/lib/weaver";
 import { SignedOut } from "@/components/SignedOut";
 
 export const metadata: Metadata = { title: "Thari — weaver" };
 
 /** Listing status -> the chip the weaver sees. */
 async function WeaverHome() {
-  const weaver = await getWeaver();
-  if (!weaver) return <SignedOut />;
+  const auth = await requireWeaver();
+  if (!auth.ok) return <SignedOut reason={auth.reason} />;
+  const weaver = auth.weaver;
 
   const { t, language } = weaverStrings(weaver.preferredLang);
   const nativeFont = fontStackFor(language.script);

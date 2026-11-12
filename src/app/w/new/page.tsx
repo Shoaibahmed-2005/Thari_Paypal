@@ -5,14 +5,15 @@ import { ChevronLeft } from "lucide-react";
 import { NewListingFlow } from "@/components/NewListingFlow";
 import { weaverStrings } from "@/lib/i18n";
 import { fontStackFor } from "@/lib/languages";
-import { getWeaver } from "@/lib/weaver";
+import { requireWeaver } from "@/lib/weaver";
 import { SignedOut } from "@/components/SignedOut";
 
 export const metadata: Metadata = { title: "Thari — new piece" };
 
 async function Flow() {
-  const weaver = await getWeaver();
-  if (!weaver) return <SignedOut />;
+  const auth = await requireWeaver();
+  if (!auth.ok) return <SignedOut reason={auth.reason} />;
+  const weaver = auth.weaver;
   const { t, language } = weaverStrings(weaver.preferredLang);
   return <NewListingFlow t={t} lang={language.code} nativeFont={fontStackFor(language.script)} />;
 }

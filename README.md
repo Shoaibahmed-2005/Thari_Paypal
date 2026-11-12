@@ -98,6 +98,18 @@ Try: *"Find me a verified handwoven silk saree under $250 and get it ready for c
 
 There's also [`/api/catalog.json`](https://thari-paypal.vercel.app/api/catalog.json) — schema.org-shaped, with `verifiedHandwoven` and the evidence sentence — plus JSON-LD on every product page, for agents that don't speak MCP.
 
+## Built with
+
+| | |
+|---|---|
+| **Next.js 16** (App Router), **TypeScript** | the app |
+| **Prisma 7** on **Neon** Postgres | data, via the serverless driver |
+| **Google Gemini** (`@google/genai`) | every AI call — see [How AI is used](#how-ai-is-used) |
+| **PayPal** Orders v2, Payouts v1, Payments v2, Webhooks, JS SDK v6 | see [How PayPal is used](#how-paypal-is-used) |
+| **AG Grid Community 36** | the co-op's listings, orders and payouts tables in [`CoopDashboard.tsx`](src/components/CoopDashboard.tsx) — sorting, quick-filter search and CSV export come from the grid; `themeQuartz.withParams` takes the project's own colour and type tokens so it matches the rest of the app |
+| **`mcp-handler`** + the MCP SDK | the agent endpoint at `/api/mcp` |
+| **Tailwind v4**, **iron-session**, **Vercel Blob**, **Vitest** | styling, the session cookie, uploads, tests |
+
 ## Running it locally
 
 Needs Node 22+.

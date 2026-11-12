@@ -62,12 +62,16 @@ export default async function WeaverSalesPage() {
                       )}
                     </div>
                     <div className="min-w-0 flex-1">
-                      {o.listing.titleNative && (
-                        <div className="t-label truncate" style={{ fontFamily: nativeFont }} lang={o.listing.lang}>
-                          {o.listing.titleNative}
-                        </div>
+                      {o.listing.titleNative && o.listing.lang === language.code ? (
+                        <>
+                          <div className="t-label truncate" style={{ fontFamily: nativeFont }} lang={o.listing.lang}>
+                            {o.listing.titleNative}
+                          </div>
+                          <div className="t-caption truncate text-ink-muted">{o.listing.title}</div>
+                        </>
+                      ) : (
+                        <div className="t-label truncate">{o.listing.title}</div>
                       )}
-                      <div className="t-caption truncate text-ink-muted">{o.listing.title}</div>
                       <div className="th-row mt-1 justify-between">
                         <OrderChip status={o.status} />
                         <span className="th-price">{formatInr(inr)}</span>

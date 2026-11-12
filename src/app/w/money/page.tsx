@@ -69,16 +69,20 @@ export default async function WeaverMoneyPage() {
               <li key={p.id} className="th-card p-3">
                 <div className="th-row justify-between">
                   <div className="min-w-0">
-                    {p.order.listing.titleNative && (
-                      <div
-                        className="t-label truncate"
-                        style={{ fontFamily: nativeFont }}
-                        lang={p.order.listing.lang}
-                      >
-                        {p.order.listing.titleNative}
-                      </div>
+                    {p.order.listing.titleNative && p.order.listing.lang === language.code ? (
+                      <>
+                        <div
+                          className="t-label truncate"
+                          style={{ fontFamily: nativeFont }}
+                          lang={p.order.listing.lang}
+                        >
+                          {p.order.listing.titleNative}
+                        </div>
+                        <div className="t-caption truncate text-ink-muted">{p.order.listing.title}</div>
+                      </>
+                    ) : (
+                      <div className="t-label truncate">{p.order.listing.title}</div>
                     )}
-                    <div className="t-caption truncate text-ink-muted">{p.order.listing.title}</div>
                   </div>
                   <span className="th-price">{formatInr(usdCentsToInr(p.amountUsdCents, env.FX_INR_PER_USD))}</span>
                 </div>

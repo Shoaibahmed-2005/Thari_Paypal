@@ -86,12 +86,21 @@ async function WeaverHome() {
                   )}
                 </div>
                 <div className="min-w-0 flex-1">
-                  {p.titleNative && (
-                    <div className="t-label truncate" style={{ fontFamily: nativeFont }} lang={p.lang}>
-                      {p.titleNative}
-                    </div>
+                  {/* Her own short name for the piece, but only when she still
+                      reads that language. A listing keeps the language she
+                      spoke, so after switching to Hindi her old Tamil titles
+                      would otherwise sit under Hindi headings — which reads
+                      as broken rather than as faithful. */}
+                  {p.titleNative && p.lang === language.code ? (
+                    <>
+                      <div className="t-label truncate" style={{ fontFamily: nativeFont }} lang={p.lang}>
+                        {p.titleNative}
+                      </div>
+                      <div className="t-caption truncate text-ink-muted">{p.title ?? "Draft"}</div>
+                    </>
+                  ) : (
+                    <div className="t-label truncate">{p.title ?? "Draft"}</div>
                   )}
-                  <div className="t-caption truncate text-ink-muted">{p.title ?? "Draft"}</div>
                   <div className="mt-1">
                     <ListingChip status={p.status} />
                   </div>

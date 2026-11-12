@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { ChevronLeft } from "lucide-react";
 import { WeaverBottomNav } from "@/components/Nav";
@@ -9,12 +8,13 @@ import { weaverStrings } from "@/lib/i18n";
 import { fontStackFor } from "@/lib/languages";
 import { formatInr, usdCentsToInr } from "@/lib/money";
 import { getWeaver } from "@/lib/weaver";
+import { SignedOut } from "@/components/SignedOut";
 
 export const metadata: Metadata = { title: "Thari — sales" };
 
 export default async function WeaverSalesPage() {
   const weaver = await getWeaver();
-  if (!weaver) redirect("/demo");
+  if (!weaver) return <SignedOut />;
 
   const { t, language } = weaverStrings(weaver.preferredLang);
   const nativeFont = fontStackFor(language.script);

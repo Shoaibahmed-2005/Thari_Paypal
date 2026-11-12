@@ -32,12 +32,24 @@ interface NavItem {
   icon: LucideIcon;
 }
 
+/**
+ * `prefetch={false}` on every tab is deliberate. These routes are behind a
+ * session, so prefetching them makes Next render them speculatively, and a
+ * prefetch that lands before the sign-in cookie does produces a payload the
+ * router may later act on. See `SignedOut` for the bug that caused.
+ */
 function BottomNav({ items, center, current }: { items: NavItem[]; center: NavItem; current?: string }) {
   const [a, b, c, d] = items;
   const item = (i: NavItem) => {
     const Icon = i.icon;
     return (
-      <Link key={i.href} href={i.href} className="th-nav__item" aria-current={current === i.href ? "page" : undefined}>
+      <Link
+        key={i.href}
+        href={i.href}
+        prefetch={false}
+        className="th-nav__item"
+        aria-current={current === i.href ? "page" : undefined}
+      >
         <Icon strokeWidth={1.75} aria-hidden />
         {i.label}
       </Link>
@@ -49,7 +61,7 @@ function BottomNav({ items, center, current }: { items: NavItem[]; center: NavIt
       <div className="th-nav">
         {item(a)}
         {item(b)}
-        <Link href={center.href} className="th-nav__center" aria-label={center.label}>
+        <Link href={center.href} prefetch={false} className="th-nav__center" aria-label={center.label}>
           <CenterIcon strokeWidth={1.75} aria-hidden />
         </Link>
         {item(c)}

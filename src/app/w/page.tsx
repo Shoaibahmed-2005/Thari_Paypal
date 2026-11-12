@@ -1,6 +1,5 @@
 import { Suspense } from "react";
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { Mic } from "lucide-react";
 import { WeaverBottomNav } from "@/components/Nav";
@@ -12,13 +11,14 @@ import { fontStackFor } from "@/lib/languages";
 import { formatInr, usdCentsToInr } from "@/lib/money";
 import { env } from "@/lib/env";
 import { getWeaver, getWeaverMoney, getWeaverNotifications, getWeaverPieces } from "@/lib/weaver";
+import { SignedOut } from "@/components/SignedOut";
 
 export const metadata: Metadata = { title: "Thari — weaver" };
 
 /** Listing status -> the chip the weaver sees. */
 async function WeaverHome() {
   const weaver = await getWeaver();
-  if (!weaver) redirect("/demo");
+  if (!weaver) return <SignedOut />;
 
   const { t, language } = weaverStrings(weaver.preferredLang);
   const nativeFont = fontStackFor(language.script);
@@ -56,6 +56,7 @@ async function WeaverHome() {
 
       <Link
         href="/w/new"
+        prefetch={false}
         className="mt-5 flex items-center justify-center gap-3 bg-coral px-5 py-6 text-on-coral no-underline"
         style={{ borderRadius: "var(--radius-xl)", boxShadow: "var(--shadow-float)" }}
       >

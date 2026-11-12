@@ -1,18 +1,18 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { connection } from "next/server";
 import type { Metadata } from "next";
 import { BuyerBottomNav, TopNav } from "@/components/Nav";
 import { OrderChip, PlaceholderImage } from "@/components/ui";
 import { formatUsd } from "@/lib/money";
 import { getCurrentUser } from "@/lib/session";
+import { SignedOut } from "@/components/SignedOut";
 
 export const metadata: Metadata = { title: "Your orders — Thari" };
 
 export default async function OrdersPage() {
   await connection();
   const user = await getCurrentUser();
-  if (!user) redirect("/demo");
+  if (!user) return <SignedOut role="buyer" />;
 
   const { getDb } = await import("@/lib/db");
   const orders = await getDb().order.findMany({

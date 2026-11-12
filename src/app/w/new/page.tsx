@@ -1,18 +1,18 @@
 import { Suspense } from "react";
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { ChevronLeft } from "lucide-react";
 import { NewListingFlow } from "@/components/NewListingFlow";
 import { weaverStrings } from "@/lib/i18n";
 import { fontStackFor } from "@/lib/languages";
 import { getWeaver } from "@/lib/weaver";
+import { SignedOut } from "@/components/SignedOut";
 
 export const metadata: Metadata = { title: "Thari — new piece" };
 
 async function Flow() {
   const weaver = await getWeaver();
-  if (!weaver) redirect("/demo");
+  if (!weaver) return <SignedOut />;
   const { t, language } = weaverStrings(weaver.preferredLang);
   return <NewListingFlow t={t} lang={language.code} nativeFont={fontStackFor(language.script)} />;
 }

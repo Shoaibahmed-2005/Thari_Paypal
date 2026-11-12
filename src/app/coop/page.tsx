@@ -1,13 +1,13 @@
-import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { CoopDashboard } from "@/components/CoopDashboard";
 import { getCoopAdmin, getCoopData } from "@/lib/coop";
+import { SignedOut } from "@/components/SignedOut";
 
 export const metadata: Metadata = { title: "Co-op dashboard — Thari" };
 
 export default async function CoopPage() {
   const admin = await getCoopAdmin();
-  if (!admin) redirect("/demo");
+  if (!admin) return <SignedOut role="coop" />;
 
   const data = await getCoopData();
 
